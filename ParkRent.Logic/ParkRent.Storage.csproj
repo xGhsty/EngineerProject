@@ -15,4 +15,8 @@
     <ProjectReference Include="..\ParkRent.Common.Storage\ParkRent.Common.Storage.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repository\" />
+  </ItemGroup>
+
 </Project>
