@@ -1,8 +1,11 @@
-﻿namespace ParkRent.Logic.Entities
+﻿using ParkRent.Common.Storage.Entities;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ParkRent.Logic.Entities
 {
-    public class User
+    [Table("Users", Schema = "ParkRent")]
+    public class User : BaseEntity
     {
-        public Guid UserId { get; set; } = Guid.NewGuid();
         public required string UserName { get; set; }
         public string? UserEmail { get; set; }
         public required string UserHashedPassword { get; set; }
