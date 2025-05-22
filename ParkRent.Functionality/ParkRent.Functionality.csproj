@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ParkRent.Common.Storage\ParkRent.Common.Storage.csproj" />
+    <ProjectReference Include="..\ParkRent.Logic\ParkRent.Storage.csproj" />
+  </ItemGroup>
+
 </Project>

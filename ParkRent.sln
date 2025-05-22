@@ -11,7 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParkRent.Common.Storage", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Functionality", "Functionality", "{3B09C461-30CC-4754-A60A-976EAB0C8891}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParkRent.Functionality", "ParkRent.Functionality\ParkRent.Functionality.csproj", "{6982B6C9-F75B-4BE8-8C73-EFF964FA8598}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParkRent.Functionality", "ParkRent.Functionality\ParkRent.Functionality.csproj", "{6982B6C9-F75B-4BE8-8C73-EFF964FA8598}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Storage", "Storage", "{0A4E8640-BD51-49BD-B7C8-F2DB0ECE4A92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParkRent.API", "ParkRent.API\ParkRent.API.csproj", "{55D39893-AF71-41C8-9896-9A20432ED57C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,11 +35,16 @@ Global
 		{6982B6C9-F75B-4BE8-8C73-EFF964FA8598}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6982B6C9-F75B-4BE8-8C73-EFF964FA8598}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6982B6C9-F75B-4BE8-8C73-EFF964FA8598}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55D39893-AF71-41C8-9896-9A20432ED57C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55D39893-AF71-41C8-9896-9A20432ED57C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55D39893-AF71-41C8-9896-9A20432ED57C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55D39893-AF71-41C8-9896-9A20432ED57C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{091D4514-29D2-4F1C-8F87-D6FE12ECA3D0} = {0A4E8640-BD51-49BD-B7C8-F2DB0ECE4A92}
 		{1EE8B48F-A545-4500-AF06-C2F2E745139B} = {92B13659-9A86-46D8-B961-897BF9217887}
 		{6982B6C9-F75B-4BE8-8C73-EFF964FA8598} = {3B09C461-30CC-4754-A60A-976EAB0C8891}
 	EndGlobalSection

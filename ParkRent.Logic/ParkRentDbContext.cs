@@ -9,14 +9,14 @@ using ParkRent.Logic.Entities;
 
 namespace ParkRent.Logic
 {
-    public class ParkRentGeoDbContext : DbContext
+    public class ParkRentDbContext : DbContext
     {
         private IConfiguration? _configuration { get; }
         public DbSet<User> Users { get; set; }
         public DbSet<ParkingSpot> ParkingSpots { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
 
-        public ParkRentGeoDbContext(IConfiguration configuration) : base()
+        public ParkRentDbContext(IConfiguration configuration) : base()
         {
             _configuration = configuration;
         }
@@ -29,6 +29,7 @@ namespace ParkRent.Logic
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.HasDefaultSchema("ParkRent");
             base.OnModelCreating(modelBuilder);
         }
     }
