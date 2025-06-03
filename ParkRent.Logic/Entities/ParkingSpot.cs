@@ -9,11 +9,13 @@ using System.Threading.Tasks;
 namespace ParkRent.Logic.Entities
 {
     [Table("ParkingSpots", Schema = "ParkRent")]
-    
     public class ParkingSpot : BaseEntity
     {
-        public User? User { get; set; }
+        public Guid? UserId { get; set; }
+
         public bool? IsAvailable { get; set; }
+
         public ICollection<Reservation>? Reservations { get; set; }
     }
+
 }

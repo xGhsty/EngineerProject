@@ -10,26 +10,25 @@ using ParkRent.Logic.Entities;
 namespace ParkRent.Logic
 {
     public class ParkRentDbContext : DbContext
-    {
-        private IConfiguration? _configuration { get; }
+    {   
+        private IConfiguration _configuration { get; }
         public DbSet<User> Users { get; set; }
         public DbSet<ParkingSpot> ParkingSpots { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
 
-        public ParkRentDbContext(IConfiguration configuration) : base()
+        public ParkRentDbContext(DbContextOptions<ParkRentDbContext> options, IConfiguration configuration) : base(options)
         {
             _configuration = configuration;
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"server=(localdb)\MSSQLLocalDB;TrustServerCertificate=True;",
+            optionsBuilder.UseSqlServer(@"server=(localdb)\MSSQLLocalDB;database=parkrent;trusted_connection=true",
                 x => x.MigrationsHistoryTable("__EFMigrationsHistory", "ParkRent"));
 
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasDefaultSchema("ParkRent");
             base.OnModelCreating(modelBuilder);
         }
     }

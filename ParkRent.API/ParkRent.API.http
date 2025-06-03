@@ -1,6 +1,6 @@
 @ParkRent.API_HostAddress = http://localhost:5154
 
-GET {{ParkRent.API_HostAddress}}/weatherforecast/
+GET {{ParkRent.API_HostAddress}}/UserController/
 Accept: application/json
 
 ###

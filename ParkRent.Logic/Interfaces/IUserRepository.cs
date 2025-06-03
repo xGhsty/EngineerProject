@@ -14,6 +14,6 @@ namespace ParkRent.Logic.Repository
         Task<IEnumerable<User>> GetAllAsync();
         Task AddUser(User user);
         Task UpdateUser(User user);
-        Task DeleteUser(Guid userId);
+        Task DeleteUser(User userId);
     }
 }

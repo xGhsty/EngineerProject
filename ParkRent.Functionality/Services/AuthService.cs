@@ -24,7 +24,7 @@ namespace ParkRent.Functionality.Services
         public async Task<AuthResponse> LoginAsyns(LoginRequest loginRequest)
         {
             var user = await _userRepository.GetByEmailAsync(loginRequest.Email);
-            if (user == null || user.UserHashedPassword != HashPassword(user.UserHashedPassword))
+            if (user == null || user.Password != HashPassword(user.Password))
             {
 
                throw new UnauthorizedAccessException("Niepoprawny email lub hasło.");
@@ -33,7 +33,7 @@ namespace ParkRent.Functionality.Services
             return new AuthResponse
             {
                 UserId = user.Id,
-                Email = user.UserEmail,
+                Email = user.Email,
                 // Role = user.Role,
                 Token = "temp-token"
             };
@@ -51,9 +51,10 @@ namespace ParkRent.Functionality.Services
             var newUser = new User
             {   
                 Id = Guid.NewGuid(),
-                UserName = registerRequest.Username,
-                UserEmail = registerRequest.Email,
-                UserHashedPassword = HashPassword(registerRequest.Password)
+                Name = registerRequest.Username,
+                Surname = registerRequest.Surname,
+                Email = registerRequest.Email,
+                Password = HashPassword(registerRequest.Password)
             };
 
             await _userRepository.AddUser(newUser);
@@ -61,7 +62,7 @@ namespace ParkRent.Functionality.Services
             return new AuthResponse
             {
                 UserId = newUser.Id,
-                Email = newUser.UserEmail,
+                Email = newUser.Email,
                 // Role = newUser.Role,
                 Token = "temp-token"
             };
