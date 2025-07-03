@@ -1,0 +1,78 @@
+.login-container {
+    background-color: #d9d9d9;
+    width: 320px;
+    padding: 30px 20px;
+    margin: 50px auto;
+    border-radius: 20px;
+    text-align: center;
+    font-family: 'Segoe UI', sans-serif;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .logo {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .title {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .input {
+    padding: 10px;
+    border: none;
+    border-radius: 15px;
+    background-color: #91e393;
+    font-size: 14px;
+  }
+  
+  .login-button {
+    padding: 10px;
+    border: solid 2px #000000;
+    border-radius: 15px;
+    background-color: #91e393;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 120px;
+    margin: 0 auto;
+  }
+  
+  .login-button:hover {
+    background-color: #7bd87e;
+  }
+  
+  .reset-password {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #000;
+  }
+  
+  .register-text {
+    margin-top: 20px;
+    font-weight: bold;        
+    font-size: 14px;
+  }
+  
+  .register-link {
+    border: none;
+    background-color: #d9d9d9;
+    transition: background-color 0.3s;
+    border-radius: 15px;
+    font-weight: bold;    
+    color: #0099ff;
+    text-decoration: none;
+  }
+
+  .register-link:hover {
+    background-color: #b3b3b3;
+  }
+  

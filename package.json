@@ -1,0 +1,23 @@
+{
+  "name": "parkrent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KrystianLabak/EngineerProject.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KrystianLabak/EngineerProject/issues"
+  },
+  "homepage": "https://github.com/KrystianLabak/EngineerProject#readme",
+  "description": "",
+  "dependencies": {
+    "react-router-dom": "^7.6.3"
+  }
+}
