@@ -17,7 +17,8 @@ export default function RegisterForm({ onBackClick }: { onBackClick?: () => void
             const data = await register(Email, Password, Name, Surname, ConfirmPassword);
             navigate("/login");
             alert("Zarejestrowano!");
-        } catch (error) {
+        } catch (error: any) {
+            console.error("Registration error:", error.response.data);
             alert("Nie udało się zarejestrować: ");
         }
     };

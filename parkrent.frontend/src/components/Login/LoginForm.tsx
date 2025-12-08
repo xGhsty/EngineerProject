@@ -2,6 +2,7 @@ import { useState } from "react";
 import { login } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
+import { Console } from "console";
 
 
 export default function LoginForm() {

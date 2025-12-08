@@ -28,13 +28,19 @@ namespace ParkRent.Storage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("IsAvailable")
+                    b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("ParkingSpots", "ParkRent");
                 });
@@ -91,6 +97,15 @@ namespace ParkRent.Storage.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users", "ParkRent");
+                });
+
+            modelBuilder.Entity("ParkRent.Logic.Entities.ParkingSpot", b =>
+                {
+                    b.HasOne("ParkRent.Logic.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ParkRent.Logic.Entities.Reservation", b =>

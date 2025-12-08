@@ -49,10 +49,31 @@ namespace ParkRent.API
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddDbContext<ParkRentDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-                    x => x.MigrationsHistoryTable("__EFMigrationsHistory", "ParkRent")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection"),
+                    x =>
+                    {
+                        x.MigrationsHistoryTable("__EFMigrationsHistory", "ParkRent");
+                        x.MigrationsAssembly("ParkRent.Storage");
+                    }
+                    ));
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<ParkRentDbContext>();
+                    context.Database.Migrate();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "B³¹d podczas inicjalizacji bazy danych");
+                }
+            }
 
             if (app.Environment.IsDevelopment())
             {

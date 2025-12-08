@@ -21,12 +21,12 @@ namespace ParkRent.Logic
             _configuration = configuration;
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer(@"server=(localdb)\MSSQLLocalDB;database=parkrent;trusted_connection=true",
-                x => x.MigrationsHistoryTable("__EFMigrationsHistory", "ParkRent"));
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    optionsBuilder.UseSqlServer(@"server=(localdb)\MSSQLLocalDB;database=parkrent;trusted_connection=true",
+        //        x => x.MigrationsHistoryTable("__EFMigrationsHistory", "ParkRent"));
 
-        }
+        //}
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -12,8 +12,8 @@ using ParkRent.Logic;
 namespace ParkRent.Storage.Migrations
 {
     [DbContext(typeof(ParkRentDbContext))]
-    [Migration("20250602161643_ParkRent")]
-    partial class ParkRent
+    [Migration("20251208161253_ParkRentAnotherDataBase")]
+    partial class ParkRentAnotherDataBase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,8 +31,12 @@ namespace ParkRent.Storage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("IsAvailable")
+                    b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -66,8 +70,6 @@ namespace ParkRent.Storage.Migrations
 
                     b.HasIndex("ParkingSlotId");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("Reservations", "ParkRent");
                 });
 
@@ -77,20 +79,23 @@ namespace ParkRent.Storage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("UserEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserHashedPassword")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserName")
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserSurname")
+                    b.Property<string>("Surname")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -114,23 +119,10 @@ namespace ParkRent.Storage.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ParkRent.Logic.Entities.User", "User")
-                        .WithMany("Reservations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("ParkingSlot");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ParkRent.Logic.Entities.ParkingSpot", b =>
-                {
-                    b.Navigation("Reservations");
-                });
-
-            modelBuilder.Entity("ParkRent.Logic.Entities.User", b =>
                 {
                     b.Navigation("Reservations");
                 });

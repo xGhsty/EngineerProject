@@ -15,7 +15,7 @@ namespace ParkRent.Logic.Entities
         public string Surname { get; set; }
         [Required]
         [EmailAddress]
-        public string? Email { get; set; }
+        public string Email { get; set; }
         [Required]
         public string Password { get; set; }
 

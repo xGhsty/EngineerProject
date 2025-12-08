@@ -43,7 +43,7 @@ namespace ParkRent.Functionality.Services
                 Token = GenerateJwtToken(user)
             };
         }
-
+        
         public async Task<AuthResponse> RegisterAsync(RegisterRequest registerRequest)
         {
             var exist = await _userRepository.GetByEmailAsync(registerRequest.Email);

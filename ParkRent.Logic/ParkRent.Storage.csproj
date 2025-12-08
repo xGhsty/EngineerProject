@@ -20,4 +20,8 @@
     <ProjectReference Include="..\ParkRent.Common.Storage\ParkRent.Common.Storage.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>
