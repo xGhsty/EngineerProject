@@ -14,11 +14,13 @@ namespace ParkRent.Logic.Entities
         [MaxLength(100)]
         public string Surname { get; set; }
         [Required]
+        [MaxLength(50)]
+        public string Username { get; set; }
+        [Required]
         [EmailAddress]
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
-
-        // public ICollection<Reservation>? Reservations { get; set; }
+        public ICollection<Reservation>? Reservations { get; set; }
     }
 }

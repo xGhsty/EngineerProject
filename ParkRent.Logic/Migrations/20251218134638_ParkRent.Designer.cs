@@ -12,8 +12,8 @@ using ParkRent.Logic;
 namespace ParkRent.Storage.Migrations
 {
     [DbContext(typeof(ParkRentDbContext))]
-    [Migration("20251208161253_ParkRentAnotherDataBase")]
-    partial class ParkRentAnotherDataBase
+    [Migration("20251218134638_ParkRent")]
+    partial class ParkRent
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

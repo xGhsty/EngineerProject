@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ParkRent.Functionality.Dto;
+using ParkRent.Functionality.Security;
 using ParkRent.Logic.Entities;
 using ParkRent.Logic.Repository;
 using ParkRent.Storage.Interfaces;
@@ -19,20 +20,27 @@ namespace ParkRent.Functionality.Services
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
-        private readonly IConfiguration _configuration;
+        private readonly JwtTokenGenerator _jwtGenerator;
+
 
         public AuthService(IUserRepository userRepository, IConfiguration configuration)
         {
             _userRepository = userRepository;
-            _configuration = configuration;
+            _jwtGenerator = new JwtTokenGenerator(configuration);
         }
 
         public async Task<AuthResponse> LoginAsyns(LoginRequest loginRequest)
         {
             var user = await _userRepository.GetByEmailAsync(loginRequest.Email);
-            if (user == null || user.Password != HashPassword(loginRequest.Password))
+
+            if (user == null)
             {
-                throw new UnauthorizedAccessException("Niepoprawny email lub hasło.");
+                throw new UnauthorizedAccessException("Nieprawidłowy email lub hasło");
+            }
+
+            if (!PasswordHasher.VerifyPassword(loginRequest.Password, user.Password))
+            {
+                throw new UnauthorizedAccessException("Nieprawidłowy email lub hasło");
             }
 
             return new AuthResponse
@@ -40,7 +48,7 @@ namespace ParkRent.Functionality.Services
                 UserId = user.Id,
                 Email = user.Email,
                 // Role = user.Role,
-                Token = GenerateJwtToken(user)
+                Token = _jwtGenerator.GenerateToken(user)
             };
         }
         
@@ -63,8 +71,9 @@ namespace ParkRent.Functionality.Services
                 Id = Guid.NewGuid(),
                 Name = registerRequest.Name,
                 Surname = registerRequest.Surname,
+                Username = registerRequest.Email.Split('@')[0],
                 Email = registerRequest.Email,
-                Password = HashPassword(registerRequest.Password)
+                Password = PasswordHasher.HashPassword(registerRequest.Password)
             };
 
             await _userRepository.AddUser(newUser);
@@ -74,50 +83,8 @@ namespace ParkRent.Functionality.Services
                 UserId = newUser.Id,
                 Email = newUser.Email,
                 // Role = newUser.Role,
-                Token = GenerateJwtToken(newUser)
+                Token = _jwtGenerator.GenerateToken(newUser)
             };
-        }
-
-
-        private string HashPassword(string password)
-        {
-            var sha256 = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(password);
-            var hash = sha256.ComputeHash(bytes);
-            return Convert.ToBase64String(hash);
-        }
-
-        private string GenerateJwtToken(User user)
-        {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var expires = _configuration["Jwt:ExpiresInMinutes"];
-            if (!double.TryParse(expires, out var expiresInMinutes))
-            {
-                expiresInMinutes = 60;
-            }
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email!),
-                    new Claim(ClaimTypes.Name, user.Name + " " +user.Surname)
-                },
-                expires: DateTime.UtcNow.AddMinutes(expiresInMinutes),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

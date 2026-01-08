@@ -9,11 +9,13 @@ namespace ParkRent.Logic.Repository
 {
     public interface IParkingSpotRepository
     {
-        Task<ParkingSpot> GetParkingSpotByIdAsync(Guid parkingSpotId);
         Task<IEnumerable<ParkingSpot>> GetAllAsync();
-        Task<IEnumerable<ParkingSpot>> GetAvailableAsync(DateTime time);
-        Task AddParkingSpotAsync(ParkingSpot parkingSpot);
-        Task UpdateParkingSpotAsync(ParkingSpot parkingSpot);
-        Task DeleteParkingSpotByIdAsync(Guid parkingSpotId);
+        Task<ParkingSpot> GetByIdAsync(Guid id);
+        Task<IEnumerable<ParkingSpot>> GetAvailableAsync();
+        Task UpdateAsync(ParkingSpot parkingSpot);
+
+        //Task AddAsync(ParkingSpot parkingSpot);
+        //Task DeleteAsync(ParkingSpot parkingSpot);
+        //Task UpdateAsync(ParkingSpot parkingSpot);
     }
 }

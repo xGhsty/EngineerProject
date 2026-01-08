@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ParkRent.Storage.Migrations
 {
     /// <inheritdoc />
-    public partial class ParkRentAnotherDataBase : Migration
+    public partial class ParkRent : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

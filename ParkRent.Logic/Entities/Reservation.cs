@@ -13,12 +13,18 @@ namespace ParkRent.Logic.Entities
     public class Reservation : BaseEntity
     {
         [Required]
+        [ForeignKey("User")]
         public Guid UserId {  get; set; }
+        public User? User { get; set; }
+
         [Required]
-        public Guid ParkingSlotId { get; set; }
+        [ForeignKey("ParkingSpot")]
+        public Guid ParkingSpotId { get; set; }
+        public ParkingSpot? ParkingSpot { get; set; }
+
         [Required]
-        public ParkingSpot? ParkingSlot { get; set; }
         public DateTime ReservationStartTime { get; set; }
+        [Required]
         public DateTime ReservationEndTime { get; set; }
 
     }

@@ -9,11 +9,13 @@ namespace ParkRent.Logic.Repository
 {
     public interface IReservationRepository
     {
+        Task<IEnumerable<Reservation>> GetAllAsync();
         Task<Reservation> GetByIdAsync(Guid id);
         Task<IEnumerable<Reservation>> GetByUserIdAsync(Guid userId);
+        Task<IEnumerable<Reservation>> GetActiveByUserIdAync(Guid userId);
         Task<IEnumerable<Reservation>> GetByParkingSpotIdAsync(Guid parkingSpotId);
-        Task AddReservation(Reservation reservation);
-        Task UpdateReservation(Reservation reservation);
-        Task DeleteReservation(Guid reservationId);
+        Task AddAsync(Reservation reservation);
+        Task UpdateAsync (Reservation reservation);
+        Task DeleteAsync(Reservation reservationId);
     }
 }
