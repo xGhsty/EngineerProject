@@ -1,0 +1,160 @@
+.dashboard{
+    display: flex;
+    min-width: 100vh;
+    background-color: white;
+}
+
+.sidebar{
+    width: 280px;
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo{
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #4caf50
+}
+
+.user-info{
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.avatar{
+    font-size: 40px;
+}
+
+.greeting{
+    font-size: 14px;
+    opacity: 0.8;
+    margin: 0;
+}
+
+.menu{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.menu-item{
+    background: none;
+    border: none;
+    color: white;
+    padding: 15px 20px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.menu-item:hover{
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.menu-item.active{
+    background-color: #4caf50;
+}
+
+.logout-button{
+    background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.logout-button:hover{
+    background-color: #c0392b;
+}
+
+.main-content{
+    flex: 1;
+    padding: 40px;
+}
+
+.main-content h1{
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+.parking-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.parking-spot{
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transoform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.parking-spot:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.parking-spot.available{
+    border: 3px solid #4caf50;
+}
+
+.parking-spot.unavailable{
+    border: 3px solid #e74c3c;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.spot-icon{
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.parking-spot.available .spot-icon{
+    color: #4caf50;
+}
+
+.parking-spot.unavailable .spot-icon{
+    color: #e74c3c;
+}
+
+.spot-name{
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #2c3e50;
+}
+
+.spot-status{
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.loading{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 24px;
+    color: #2c3e50;
+}

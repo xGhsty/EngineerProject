@@ -31,7 +31,7 @@ namespace ParkRent.Storage.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Reservation>> GetActiveByUserIdAync(Guid userId)
+        public async Task<IEnumerable<Reservation>> GetActiveByUserIdAsync(Guid userId)
         {
             var now = DateTime.UtcNow;
             return await _context.Reservations

@@ -12,7 +12,7 @@ namespace ParkRent.Logic.Repository
         Task<IEnumerable<Reservation>> GetAllAsync();
         Task<Reservation> GetByIdAsync(Guid id);
         Task<IEnumerable<Reservation>> GetByUserIdAsync(Guid userId);
-        Task<IEnumerable<Reservation>> GetActiveByUserIdAync(Guid userId);
+        Task<IEnumerable<Reservation>> GetActiveByUserIdAsync(Guid userId);
         Task<IEnumerable<Reservation>> GetByParkingSpotIdAsync(Guid parkingSpotId);
         Task AddAsync(Reservation reservation);
         Task UpdateAsync (Reservation reservation);

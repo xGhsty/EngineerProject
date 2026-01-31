@@ -8,7 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ParkRent.Functionality.Dashboard
+namespace ParkRent.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -27,7 +27,7 @@ namespace ParkRent.Functionality.Dashboard
         }
 
         [HttpGet("user-info")]
-        public async Task<IActionResult> GetUserInfo(Guid id)
+        public async Task<IActionResult> GetUserInfo()
         {
             try
             {
@@ -46,6 +46,7 @@ namespace ParkRent.Functionality.Dashboard
                 return Ok(new
                 {
                     userId = user.Id,
+                    username = user.Username,
                     name = user.Name,
                     surname = user.Surname,
                     email = user.Email,
@@ -58,8 +59,8 @@ namespace ParkRent.Functionality.Dashboard
             }
         }
 
-        [HttpGet("parking-spot")]
-        public async Task<IActionResult> GetParkingSpot()
+        [HttpGet("parking-spots")]
+        public async Task<IActionResult> GetParkingSpots()
         {
             try
             {
@@ -114,7 +115,7 @@ namespace ParkRent.Functionality.Dashboard
                     return Unauthorized(new { message = "Brak autoryzacji" });
                 }
 
-                var reservations = await _reservationRepository.GetActiveByUserIdAync(Guid.Parse(userId));
+                var reservations = await _reservationRepository.GetActiveByUserIdAsync(Guid.Parse(userId));
 
                 var reservationsDto = reservations.Select(r => new
                 {

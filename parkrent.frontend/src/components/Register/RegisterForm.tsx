@@ -6,15 +6,16 @@ import { useNavigate } from "react-router-dom";
 export default function RegisterForm({ onBackClick }: { onBackClick?: () => void }) {
     const [Email, setEmail] = useState("");
     const [Password, setPassword] = useState("");
-    const [Name, setUsername] = useState("");
+    const [Name, setName] = useState("");
     const [Surname, setSurname] = useState("");
+    const [Username, setUsername] = useState("");
     const [ConfirmPassword, setConfirmPassword] = useState("");
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const data = await register(Email, Password, Name, Surname, ConfirmPassword);
+            const data = await register(Email, Password, Name, Surname, Username, ConfirmPassword);
             navigate("/login");
             alert("Zarejestrowano!");
         } catch (error: any) {
@@ -31,7 +32,7 @@ export default function RegisterForm({ onBackClick }: { onBackClick?: () => void
                     type="Imie"
                     placeholder="Imię"
                     value={Name}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => setName(e.target.value)}
                     className="input"
                 />
                 <input required
@@ -39,6 +40,13 @@ export default function RegisterForm({ onBackClick }: { onBackClick?: () => void
                     placeholder="Nazwisko"
                     value={Surname}
                     onChange={(e) => setSurname(e.target.value)}
+                    className="input"
+                />
+                <input
+                    type = "text"
+                    placeholder="Nazwa użytkownika (opcjonalnie)"
+                    value={Username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="input"
                 />
                 <input required

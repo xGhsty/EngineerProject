@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace ParkRent.Functionality.Security
 {
-    public static class PasswordHasher
+    public class PasswordHasher
     {
-        public static string HashPassword(string password)
+        public string HashPassword(string password)
         {
             using (var sha256 = SHA256.Create())
             {
@@ -18,7 +18,7 @@ namespace ParkRent.Functionality.Security
             }
         }
 
-        public static bool VerifyPassword(string password, string storeHash)
+        public bool VerifyPassword(string password, string storeHash)
         {
             var inputHash = HashPassword(password);
             return inputHash == storeHash;

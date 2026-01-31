@@ -21,12 +21,13 @@ namespace ParkRent.Functionality.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly JwtTokenGenerator _jwtGenerator;
+        private readonly PasswordHasher _passwordHasher;
 
-
-        public AuthService(IUserRepository userRepository, IConfiguration configuration)
+        public AuthService(IUserRepository userRepository, IConfiguration configuration, PasswordHasher passwordHasher)
         {
             _userRepository = userRepository;
             _jwtGenerator = new JwtTokenGenerator(configuration);
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<AuthResponse> LoginAsyns(LoginRequest loginRequest)
@@ -38,7 +39,7 @@ namespace ParkRent.Functionality.Services
                 throw new UnauthorizedAccessException("Nieprawidłowy email lub hasło");
             }
 
-            if (!PasswordHasher.VerifyPassword(loginRequest.Password, user.Password))
+            if (!_passwordHasher.VerifyPassword(loginRequest.Password, user.Password))
             {
                 throw new UnauthorizedAccessException("Nieprawidłowy email lub hasło");
             }
@@ -66,14 +67,31 @@ namespace ParkRent.Functionality.Services
                 throw new InvalidOperationException("Hasła są niepoprawne.");
             }
 
+            var username = string.IsNullOrWhiteSpace(registerRequest.Username)
+                ? registerRequest.Email.Split('@')[0] : registerRequest.Username;
+
+            var existingUsername = await _userRepository.GetByUsernameAsync(username);
+            if (existingUsername != null)
+            {
+                var counter = 1;
+                var baseUsername = username;
+                while (existingUsername != null)
+                {
+                    username = $"{baseUsername}{counter}";
+                    existingUsername = await _userRepository.GetByUsernameAsync(username);
+                    counter++;
+                }
+                  
+            }
+
             var newUser = new User
             {
                 Id = Guid.NewGuid(),
                 Name = registerRequest.Name,
                 Surname = registerRequest.Surname,
-                Username = registerRequest.Email.Split('@')[0],
+                Username = username,
                 Email = registerRequest.Email,
-                Password = PasswordHasher.HashPassword(registerRequest.Password)
+                Password = _passwordHasher.HashPassword(registerRequest.Password)
             };
 
             await _userRepository.AddUser(newUser);

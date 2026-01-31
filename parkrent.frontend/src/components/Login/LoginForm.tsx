@@ -2,7 +2,6 @@ import { useState } from "react";
 import { login } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
-import { Console } from "console";
 
 
 export default function LoginForm() {
@@ -14,14 +13,16 @@ export default function LoginForm() {
         e.preventDefault();
         try {
             const data = await login(email, password);
+            console.log("Login response data:", data);
             if (typeof data === "object" && data !== null && "token" in data && typeof (data as any).token === "string") {
                 localStorage.setItem("token", (data as any).token);
-                alert("Zalogowano!");
+                console.log("Token stored in localStorage");
                 navigate("/dashboard");
             } else {
                 throw new Error("Invalid login response");
             }
         } catch (error) {
+            console.log("Login error:", error);
             alert("Nie udało się zalogować");
         }
     };

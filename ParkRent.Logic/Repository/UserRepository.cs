@@ -46,6 +46,11 @@ namespace ParkRent.Storage.Repository
             return await _context.FindAsync<User>(id);
         }
 
+        public async Task<User> GetByUsernameAsync(string username)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        }
+
         public Task UpdateUser(User user)
         {
             _context.Users.Update(user);

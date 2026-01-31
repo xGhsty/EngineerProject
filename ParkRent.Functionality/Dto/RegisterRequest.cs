@@ -15,6 +15,7 @@ namespace ParkRent.Functionality.Dto
         public required string Surname { get; set; }
         [Required]
         public required string Email { get; set; }
+        public string? Username { get; set; }
         [Required]
         public required string Password { get; set; }
         [Required]

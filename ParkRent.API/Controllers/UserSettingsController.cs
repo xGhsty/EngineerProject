@@ -9,15 +9,17 @@ using System.Security.Claims;
 namespace ParkRent.API.Controllers
 {
     [ApiController]
-    [Route("api/[ccontroller]")]
+    [Route("api/[controller]")]
     [Authorize]
     public class UserSettingsController : Controller
     {
         private readonly IUserRepository _userRepository;
+        private readonly PasswordHasher _passwordHasher;
 
-        public UserSettingsController(IUserRepository userRepository)
+        public UserSettingsController(IUserRepository userRepository, PasswordHasher passwordHasher)
         {
             _userRepository = userRepository;
+            _passwordHasher = passwordHasher;
         }
 
         [HttpGet("profile")]
@@ -117,7 +119,7 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Nie znaleziono użytkownika" });
                 }
 
-                if (!PasswordHasher.VerifyPassword(request.CurrentPassword, user.Password))
+                if (!_passwordHasher.VerifyPassword(request.CurrentPassword, user.Password))
                 {
                     return BadRequest(new { message = "Aktualne hasło jest niepoprawne" });
                 }
@@ -132,7 +134,7 @@ namespace ParkRent.API.Controllers
                     return BadRequest(new { message = "Nowe hasło musi mieć minimum 6 znaków" });
                 }
 
-                user.Password = PasswordHasher.HashPassword(request.NewPassword);
+                user.Password = _passwordHasher.HashPassword(request.NewPassword);
                 await _userRepository.UpdateUser(user);
 
                 return Ok(new { message = "Hasło zostało zmienione" });
@@ -159,7 +161,7 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Nie znaleziono użytkownika" });
                 }
 
-                if (!PasswordHasher.VerifyPassword(request.Password, user.Password))
+                if (!_passwordHasher.VerifyPassword(request.Password, user.Password))
                 {
                     return BadRequest(new { message = "Niepoprawne hasło" });
                 }

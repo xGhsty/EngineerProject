@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using ParkRent.Functionality.Security;
 using ParkRent.Functionality.Services;
 using ParkRent.Logic;
 using ParkRent.Logic.Repository;
@@ -36,7 +37,7 @@ namespace ParkRent.API
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                    Description = "Wpisz token JWT (bez s³owa 'Bearer')"
+                    Description = "Wpisz token JWT"
                 });
 
                     options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
@@ -76,6 +77,7 @@ namespace ParkRent.API
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IParkingSpotRepository, ParkingRepository>();
             builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+            builder.Services.AddScoped<PasswordHasher>();
             builder.Services.AddDbContext<ParkRentDbContext>(options =>
                 options.UseSqlServer(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
