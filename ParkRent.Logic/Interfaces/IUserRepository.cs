@@ -13,8 +13,9 @@ namespace ParkRent.Logic.Repository
         Task<User> GetByEmailAsync(string email);
         Task<User> GetByUsernameAsync(string username);
         Task<IEnumerable<User>> GetAllAsync();
-        Task AddUser(User user);
-        Task UpdateUser(User user);
-        Task DeleteUser(User userId);
+        Task<IEnumerable<User>> GetByDistrictIdAsync(Guid districtId);
+        Task AddAsync(User user);
+        Task UpdateAsync(User user);
+        Task DeleteAsync(User userId);
     }
 }

@@ -1,5 +1,5 @@
-import {useEffect, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getUserInfo, getParkingSpots, type UserInfo, type ParkingSpot } from '../../api/dashboard';
 import './Dashboard.css';
 
@@ -7,6 +7,7 @@ export default function Dashboard() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const [parkingSpots, setParkingSpots] = useState<ParkingSpot[]>([]);
     const [loading, setLoading] = useState(true);
+    const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -15,13 +16,13 @@ export default function Dashboard() {
 
     const loadDashboardData = async () => {
         try {
-            const [user, spots]: [any, any]= await Promise.all([
+            const [user, spots] = await Promise.all([
                 getUserInfo(),
                 getParkingSpots()
             ]);
 
-            setUserInfo(user as UserInfo);
-            setParkingSpots(spots as ParkingSpot[]);
+            setUserInfo(user);
+            setParkingSpots(spots);
             setLoading(false);
         } catch (error) {
             console.error('Error loading dashboard data:', error);
@@ -33,54 +34,59 @@ export default function Dashboard() {
     const handleLogout = () => {
         localStorage.removeItem('token');
         navigate('/login');
-    }
+    };
 
     if (loading) {
-        return <div className='Loading'>Ładowanie...</div>;
+        return <div className='loading'>Ładowanie...</div>;
     }
 
     return (
-        <div className='Dashboard'>
-            <aside className='sidebar'>
-                <div className="logo">ParkRent</div>
+        <div className="dashboard">
+            <button 
+                className={`hamburger ${menuOpen ? 'open' : ''}`}
+                onClick={() => setMenuOpen(!menuOpen)}>
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            {menuOpen && (
+                <div 
+                    className="overlay" 
+                    onClick={() => setMenuOpen(false)}
+                />
+            )}
 
+            <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
+                <div className="logo">ParkRent</div>
                 <div className="user-info">
-                    <div className="avatar">👤</div>
+                    <div className="avatar">
+                        {userInfo?.name?.[0]}{userInfo?.surname?.[0]}
+                    </div>
                     <div className="user-details">
-                        <p className="greetins">Cześć</p>
-                        <p className="username">{userInfo?.fullName}</p>
+                        <p className="greeting">Cześć {userInfo?.name}!</p>
                     </div>
                 </div>
 
-                <nav className="Menu">
-                    <button className="menu-item active">
-                        Moje miejsce parkingowe
-                    </button>
-                    <button className ="menu-item">
-                        Ustawienia
-                    </button>
-                    <button className ="menu-item">
-                        Historia rezerwacji
-                    </button>
+                <nav className="menu">
+                    <button className="menu-item active">🅿️ Moje rezerwacje</button>
+                    <button className="menu-item">📋 Ustawienia</button>
+                    <button className="menu-item">📜 Historia rezerwacji</button>
+                    <button className="menu-item logout" onClick={handleLogout}>Wyloguj się</button>
                 </nav>
-                <button className="logout-button" onClick={handleLogout}>
-                    Wyloguj się
-                    </button>
             </aside>
-
+            
             <main className="main-content">
-                <h1>Panel główny</h1>
-
                 <div className="parking-grid">
-                    {parkingSpots.map((spot) => (
-                        <div
+                    {parkingSpots.map(spot => (
+                        <div 
                             key={spot.id}
-                            className={'parking-spot ' + (spot.isAvailable ? 'available' : 'unavailable')}
+                            className={`parking-spot ${spot.isAvailable ? 'available' : 'occupied'}`}
                         >
                             <div className="spot-icon">P</div>
                             <div className="spot-name">{spot.name}</div>
                             <div className="spot-status">
-                                {spot.isAvailable ? 'Wolne' : 'Zajęte'}
+                                {spot.isAvailable ? '✓ Wolne' : '✗ Zajęte'}
                             </div>
                         </div>
                     ))}

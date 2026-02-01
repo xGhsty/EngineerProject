@@ -11,7 +11,7 @@ namespace ParkRent.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class UserSettingsController : Controller
+    public class UserSettingsController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
         private readonly PasswordHasher _passwordHasher;
@@ -89,7 +89,7 @@ namespace ParkRent.API.Controllers
                 }
 
                 user.Username = request.Username;
-                await _userRepository.UpdateUser(user);
+                await _userRepository.UpdateAsync(user);
 
                 return Ok(new
                 {
@@ -119,7 +119,7 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Nie znaleziono użytkownika" });
                 }
 
-                if (!_passwordHasher.VerifyPassword(request.CurrentPassword, user.Password))
+                if (!_passwordHasher.Verify(request.CurrentPassword, user.Password))
                 {
                     return BadRequest(new { message = "Aktualne hasło jest niepoprawne" });
                 }
@@ -134,8 +134,8 @@ namespace ParkRent.API.Controllers
                     return BadRequest(new { message = "Nowe hasło musi mieć minimum 6 znaków" });
                 }
 
-                user.Password = _passwordHasher.HashPassword(request.NewPassword);
-                await _userRepository.UpdateUser(user);
+                user.Password = _passwordHasher.Hash(request.NewPassword);
+                await _userRepository.UpdateAsync(user);
 
                 return Ok(new { message = "Hasło zostało zmienione" });
             }
@@ -161,12 +161,12 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Nie znaleziono użytkownika" });
                 }
 
-                if (!_passwordHasher.VerifyPassword(request.Password, user.Password))
+                if (!_passwordHasher.Verify(request.Password, user.Password))
                 {
                     return BadRequest(new { message = "Niepoprawne hasło" });
                 }
 
-                await _userRepository.DeleteUser(user);
+                await _userRepository.DeleteAsync(user);
                 return Ok(new { message = "Konto zostało usunięte pomyślnie" });
 
 

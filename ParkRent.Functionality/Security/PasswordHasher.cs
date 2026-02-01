@@ -9,19 +9,14 @@ namespace ParkRent.Functionality.Security
 {
     public class PasswordHasher
     {
-        public string HashPassword(string password)
+        public string Hash(string password)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(bytes);
-            }
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
-        public bool VerifyPassword(string password, string storeHash)
+        public bool Verify(string password, string storeHash)
         {
-            var inputHash = HashPassword(password);
-            return inputHash == storeHash;
+            return BCrypt.Net.BCrypt.Verify(password, storeHash);
         }
     }
 }

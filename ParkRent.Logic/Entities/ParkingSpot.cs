@@ -1,4 +1,5 @@
 ﻿using ParkRent.Common.Storage.Entities;
+using ParkRent.Storage.Entities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,6 +19,10 @@ namespace ParkRent.Logic.Entities
         public string Name { get; set; }
 
         public bool IsAvailable { get; set; }
+        [Required]
+        [ForeignKey("Districts")]
+        public Guid DistrictId { get; set; }
+        public District? District { get; set; }
 
         public ICollection<Reservation>? Reservations { get; set; }
     }

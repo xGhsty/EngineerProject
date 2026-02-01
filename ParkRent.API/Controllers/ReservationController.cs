@@ -10,7 +10,7 @@ namespace ParkRent.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class ReservationController : Controller
+    public class ReservationController : ControllerBase
     {
         private readonly IReservationRepository _reservationRepository;
         private readonly IParkingSpotRepository _parkingSpotRepository;

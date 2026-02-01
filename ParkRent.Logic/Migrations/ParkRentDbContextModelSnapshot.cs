@@ -28,6 +28,9 @@ namespace ParkRent.Storage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("DistrictId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 
@@ -39,6 +42,8 @@ namespace ParkRent.Storage.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DistrictId");
 
                     b.HasIndex("UserId");
 
@@ -78,6 +83,9 @@ namespace ParkRent.Storage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("DistrictId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -91,6 +99,9 @@ namespace ParkRent.Storage.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
                     b.Property<string>("Surname")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -103,14 +114,41 @@ namespace ParkRent.Storage.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DistrictId");
+
                     b.ToTable("Users", "ParkRent");
+                });
+
+            modelBuilder.Entity("ParkRent.Storage.Entities.District", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Districts", "ParkRent");
                 });
 
             modelBuilder.Entity("ParkRent.Logic.Entities.ParkingSpot", b =>
                 {
+                    b.HasOne("ParkRent.Storage.Entities.District", "District")
+                        .WithMany("ParkingSpots")
+                        .HasForeignKey("DistrictId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ParkRent.Logic.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("District");
 
                     b.Navigation("User");
                 });
@@ -126,12 +164,23 @@ namespace ParkRent.Storage.Migrations
                     b.HasOne("ParkRent.Logic.Entities.User", "User")
                         .WithMany("Reservations")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ParkingSpot");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ParkRent.Logic.Entities.User", b =>
+                {
+                    b.HasOne("ParkRent.Storage.Entities.District", "District")
+                        .WithMany("Users")
+                        .HasForeignKey("DistrictId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("District");
                 });
 
             modelBuilder.Entity("ParkRent.Logic.Entities.ParkingSpot", b =>
@@ -142,6 +191,13 @@ namespace ParkRent.Storage.Migrations
             modelBuilder.Entity("ParkRent.Logic.Entities.User", b =>
                 {
                     b.Navigation("Reservations");
+                });
+
+            modelBuilder.Entity("ParkRent.Storage.Entities.District", b =>
+                {
+                    b.Navigation("ParkingSpots");
+
+                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }

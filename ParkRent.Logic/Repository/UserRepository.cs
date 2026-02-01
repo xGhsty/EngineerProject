@@ -19,13 +19,13 @@ namespace ParkRent.Storage.Repository
         {
             _context = context;
         }
-        public async Task AddUser(User user)
+        public async Task AddAsync(User user)
         {
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteUser(User userId)
+        public async Task DeleteAsync(User userId)
         {
             _context.Users.Remove(userId);
             await _context.SaveChangesAsync();
@@ -33,7 +33,17 @@ namespace ParkRent.Storage.Repository
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {
-            return await _context.Users.ToListAsync();
+            return await _context.Users
+                .Include(u => u.District)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<User>> GetByDistrictIdAsync(Guid districtId)
+        {
+            return await _context.Users
+                .Include (u => u.DistrictId)
+                .Where(u => u.DistrictId == districtId)
+                .ToListAsync();
         }
 
         public async Task<User> GetByEmailAsync(string email)
@@ -51,7 +61,7 @@ namespace ParkRent.Storage.Repository
             return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        public Task UpdateUser(User user)
+        public Task UpdateAsync(User user)
         {
             _context.Users.Update(user);
             return _context.SaveChangesAsync();

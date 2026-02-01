@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using ParkRent.Common.Storage.Enums;
 using ParkRent.Functionality.Dto;
 using ParkRent.Functionality.Security;
 using ParkRent.Logic.Entities;
@@ -39,17 +40,21 @@ namespace ParkRent.Functionality.Services
                 throw new UnauthorizedAccessException("Nieprawidłowy email lub hasło");
             }
 
-            if (!_passwordHasher.VerifyPassword(loginRequest.Password, user.Password))
+            bool isPasswordValid = _passwordHasher.Verify(loginRequest.Password, user.Password);
+            if (!isPasswordValid)
             {
                 throw new UnauthorizedAccessException("Nieprawidłowy email lub hasło");
             }
 
+            var token = _jwtGenerator.GenerateToken(user);
+
             return new AuthResponse
             {
                 UserId = user.Id,
-                Email = user.Email,
-                // Role = user.Role,
-                Token = _jwtGenerator.GenerateToken(user)
+                Username = user.Username,
+                Email = user.Email,  
+                Token = token,
+                Role = user.Role.ToString(),
             };
         }
         
@@ -64,7 +69,7 @@ namespace ParkRent.Functionality.Services
 
             if (registerRequest.Password != registerRequest.ConfirmPassword)
             {
-                throw new InvalidOperationException("Hasła są niepoprawne.");
+                throw new InvalidOperationException("Hasła nie są takie same.");
             }
 
             var username = string.IsNullOrWhiteSpace(registerRequest.Username)
@@ -91,16 +96,19 @@ namespace ParkRent.Functionality.Services
                 Surname = registerRequest.Surname,
                 Username = username,
                 Email = registerRequest.Email,
-                Password = _passwordHasher.HashPassword(registerRequest.Password)
+                Password = _passwordHasher.Hash(registerRequest.Password),
+                DistrictId = registerRequest.DistrictId,
+                Role = UserRole.User
             };
 
-            await _userRepository.AddUser(newUser);
+            await _userRepository.AddAsync(newUser);
 
             return new AuthResponse
             {
                 UserId = newUser.Id,
+                Username = newUser.Username,
                 Email = newUser.Email,
-                // Role = newUser.Role,
+                Role = newUser.Role.ToString(),
                 Token = _jwtGenerator.GenerateToken(newUser)
             };
         }

@@ -1,4 +1,6 @@
 ﻿using ParkRent.Common.Storage.Entities;
+using ParkRent.Common.Storage.Enums;
+using ParkRent.Storage.Entities;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -21,6 +23,11 @@ namespace ParkRent.Logic.Entities
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
+        [Required]
+        public Guid DistrictId { get; set; }
+        public District? District { get; set; }
+        public UserRole Role { get; set; } = UserRole.User;
+
         public ICollection<Reservation>? Reservations { get; set; }
     }
 }

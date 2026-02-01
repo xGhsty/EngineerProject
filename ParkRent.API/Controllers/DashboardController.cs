@@ -64,22 +64,28 @@ namespace ParkRent.API.Controllers
         {
             try
             {
-                var spots = await _parkingSpotRepository.GetAllAsync();
-
-                var spotsDto = spots.Select(s => new
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
                 {
-                    Id = s.Id,
-                    name = s.Name,
-                    isAvailable = s.IsAvailable,
-                    ownerName = s.User != null ? $"{s.User.Name} {s.User.Surname}" : null,
-                });
+                    return Unauthorized(new { message = "Brak autoryzacji" });
+                }
 
-                return Ok(spotsDto);
+                var user = await _userRepository.GetByIdAsync(Guid.Parse(userId));
+                if (user == null)
+                {
+                    return NotFound(new { message = "Użytkownik nie istnieje" });
+                }
+
+                var parkingSpots = await _parkingSpotRepository.GetByDistrictIdAsync(user.DistrictId);
+
+                return Ok(parkingSpots.Select(p => new
+                {
+                    id = p.Id,
+                    name = p.Name,
+                    isAvailable = p.IsAvailable,
+                }));
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new {message = ex.Message});
-            }
+            catch (Exception ex) { return BadRequest(new {message = ex.Message}); } 
         }
 
         [HttpGet("available-spots")]

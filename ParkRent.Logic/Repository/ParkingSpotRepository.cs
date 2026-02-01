@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace ParkRent.Storage.Repository
 {
-    public class ParkingRepository : IParkingSpotRepository
+    public class ParkingSpotRepository : IParkingSpotRepository
     {
         private readonly ParkRentDbContext _context;
 
-        public ParkingRepository(ParkRentDbContext context)
+        public ParkingSpotRepository(ParkRentDbContext context)
         {
             _context = context;
         }
@@ -30,6 +30,13 @@ namespace ParkRent.Storage.Repository
         {
             return await _context.ParkingSpots
                 .Where(p => p.IsAvailable)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ParkingSpot>> GetByDistrictIdAsync(Guid districtId)
+        {
+            return await _context.ParkingSpots
+                .Include (p => p.DistrictId ==  districtId)
                 .ToListAsync();
         }
 
