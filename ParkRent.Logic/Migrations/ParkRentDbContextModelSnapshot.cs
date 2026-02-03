@@ -83,7 +83,7 @@ namespace ParkRent.Storage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("DistrictId")
+                    b.Property<Guid?>("DistrictId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Email")
@@ -177,8 +177,7 @@ namespace ParkRent.Storage.Migrations
                     b.HasOne("ParkRent.Storage.Entities.District", "District")
                         .WithMany("Users")
                         .HasForeignKey("DistrictId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("District");
                 });

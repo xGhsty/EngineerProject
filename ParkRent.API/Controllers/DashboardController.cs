@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ParkRent.Logic.Entities;
 using ParkRent.Logic.Repository;
 using System;
 using System.Collections.Generic;
@@ -76,7 +77,17 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Użytkownik nie istnieje" });
                 }
 
-                var parkingSpots = await _parkingSpotRepository.GetByDistrictIdAsync(user.DistrictId);
+
+                if (user.DistrictId == null)
+                {
+                    return Ok(new
+                    {
+                        message = "Twoje konto nie jest przypisane do żadnej dzielnicy. Skontaktuj się z administratorem osiedla.",
+                        parkingSpots = new List<object>()
+                    });
+                }
+
+                var parkingSpots = await _parkingSpotRepository.GetByDistrictIdAsync(user.DistrictId.Value);
 
                 return Ok(parkingSpots.Select(p => new
                 {
@@ -85,7 +96,10 @@ namespace ParkRent.API.Controllers
                     isAvailable = p.IsAvailable,
                 }));
             }
-            catch (Exception ex) { return BadRequest(new {message = ex.Message}); } 
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("available-spots")]

@@ -2,33 +2,37 @@
 using ParkRent.Logic;
 using ParkRent.Logic.Entities;
 using ParkRent.Logic.Repository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ParkRent.Storage.Repository
 {
     public class UserRepository : IUserRepository
-    {   
-
+    {
         private readonly ParkRentDbContext _context;
 
         public UserRepository(ParkRentDbContext context)
         {
             _context = context;
         }
-        public async Task AddAsync(User user)
+
+        public async Task<User?> GetByIdAsync(Guid id)
         {
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+            return await _context.Users
+                .Include(u => u.District) // <- DODANE!
+                .FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task DeleteAsync(User userId)
+        public async Task<User?> GetByUsernameAsync(string username)
         {
-            _context.Users.Remove(userId);
-            await _context.SaveChangesAsync();
+            return await _context.Users
+                .Include(u => u.District) // <- DODANE!
+                .FirstOrDefaultAsync(u => u.Username == username);
+        }
+
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _context.Users
+                .Include(u => u.District) // <- DODANE!
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
@@ -41,30 +45,27 @@ namespace ParkRent.Storage.Repository
         public async Task<IEnumerable<User>> GetByDistrictIdAsync(Guid districtId)
         {
             return await _context.Users
-                .Include (u => u.DistrictId)
+                .Include(u => u.District)
                 .Where(u => u.DistrictId == districtId)
                 .ToListAsync();
         }
 
-        public async Task<User> GetByEmailAsync(string email)
+        public async Task AddAsync(User user)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<User> GetByIdAsync(Guid id)
-        {
-            return await _context.FindAsync<User>(id);
-        }
-
-        public async Task<User> GetByUsernameAsync(string username)
-        {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-        }
-
-        public Task UpdateAsync(User user)
+        public async Task UpdateAsync(User user)
         {
             _context.Users.Update(user);
-            return _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(User user)
+        {
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
         }
     }
 }

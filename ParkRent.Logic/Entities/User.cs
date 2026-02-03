@@ -23,8 +23,7 @@ namespace ParkRent.Logic.Entities
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
-        [Required]
-        public Guid DistrictId { get; set; }
+        public Guid? DistrictId { get; set; }
         public District? District { get; set; }
         public UserRole Role { get; set; } = UserRole.User;
 

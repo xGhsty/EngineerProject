@@ -71,9 +71,8 @@ namespace ParkRent.Storage.Repository
         {
             return await _context.Reservations
                 .Include(r => r.ParkingSpot)
-                .Where(r => r.UserId == userId &&
-                            r.ReservationStartTime <= DateTime.Now &&
-                            r.ReservationEndTime <= DateTime.Now)
+                    .ThenInclude(ps => ps.District)
+                .Where(r => r.UserId == userId)
                 .ToListAsync();
         }
 

@@ -53,20 +53,26 @@ namespace ParkRent.Storage.Repository
             await _context.SaveChangesAsync();
         }
 
-        //public Task UpdateAsync(ParkingSpot parkingSpot)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public async Task AddAsync(ParkingSpot parkingSpot)
+        {
+            await _context.ParkingSpots .AddAsync(parkingSpot);
+            await _context.SaveChangesAsync();
+        }
 
-        //public Task AddAsync(ParkingSpot parkingSpot)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public async Task DeleteAsync(ParkingSpot parkingSpot)
+        {
+            _context.ParkingSpots.Remove(parkingSpot);
+            await _context.SaveChangesAsync();
+        }
 
-        //public Task DeleteAsync(ParkingSpot parkingSpot)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
+        public async Task<IEnumerable<ParkingSpot>> GetByOwnerIdAsync(Guid userId)
+        {
+            return await _context.ParkingSpots
+                .Include(p => p.District)
+                .Include(p => p.Reservations)
+                    .ThenInclude(r => r.User)
+                .Where(p => p.UserId == userId)
+                .ToListAsync();
+        }
     }
 }

@@ -77,6 +77,7 @@ namespace ParkRent.API
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IParkingSpotRepository, ParkingSpotRepository>();
             builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+            builder.Services.AddScoped<IDistrictRepository, DistrictRepository>();
             builder.Services.AddScoped<PasswordHasher>();
             builder.Services.AddDbContext<ParkRentDbContext>(options =>
                 options.UseSqlServer(

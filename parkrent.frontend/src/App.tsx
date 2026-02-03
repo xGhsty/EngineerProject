@@ -5,6 +5,7 @@ import RegisterForm from './components/Register/RegisterForm';
 import Dashboard from './components/Dashboard/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 function App() {
   return (

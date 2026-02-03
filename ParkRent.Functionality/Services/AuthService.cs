@@ -97,7 +97,7 @@ namespace ParkRent.Functionality.Services
                 Username = username,
                 Email = registerRequest.Email,
                 Password = _passwordHasher.Hash(registerRequest.Password),
-                DistrictId = registerRequest.DistrictId,
+                DistrictId = null,
                 Role = UserRole.User
             };
 

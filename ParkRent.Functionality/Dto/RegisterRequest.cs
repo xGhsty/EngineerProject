@@ -20,7 +20,6 @@ namespace ParkRent.Functionality.Dto
         public required string Password { get; set; }
         [Required]
         public required string ConfirmPassword { get; set; }
-        public Guid DistrictId { get; set; }
 
     }
 }

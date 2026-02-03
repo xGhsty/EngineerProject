@@ -20,6 +20,11 @@ export interface UserInfo {
     fullName: string;
 }
 
+export interface NoParkingSpots{
+    message: string;
+    parkingSpots: [];
+}
+
 export interface ParkingSpot {
     id: string;
     name: string;
@@ -31,7 +36,7 @@ export const getUserInfo = async (): Promise<UserInfo> => {
     return response.data;
 };
 
-export const getParkingSpots = async (): Promise<ParkingSpot[]> => {
+export const getParkingSpots = async (): Promise<ParkingSpot[] | NoParkingSpots> => {
     const response = await axios.get<ParkingSpot[]>(`${API_URL}/dashboard/parking-spots`, getAuthHeader());
     return response.data;
 };

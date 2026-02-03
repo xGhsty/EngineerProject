@@ -16,6 +16,7 @@ export default function LoginForm() {
             console.log("Login response data:", data);
             if (typeof data === "object" && data !== null && "token" in data && typeof (data as any).token === "string") {
                 localStorage.setItem("token", (data as any).token);
+                localStorage.setItem("role", (data as any).role);
                 console.log("Token stored in localStorage");
                 navigate("/dashboard");
             } else {

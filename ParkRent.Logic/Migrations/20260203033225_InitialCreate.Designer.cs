@@ -12,8 +12,8 @@ using ParkRent.Logic;
 namespace ParkRent.Storage.Migrations
 {
     [DbContext(typeof(ParkRentDbContext))]
-    [Migration("20260201024818_ParkRentAnotherDataBase")]
-    partial class ParkRentAnotherDataBase
+    [Migration("20260203033225_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,7 +86,7 @@ namespace ParkRent.Storage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("DistrictId")
+                    b.Property<Guid?>("DistrictId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Email")
@@ -180,8 +180,7 @@ namespace ParkRent.Storage.Migrations
                     b.HasOne("ParkRent.Storage.Entities.District", "District")
                         .WithMany("Users")
                         .HasForeignKey("DistrictId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("District");
                 });

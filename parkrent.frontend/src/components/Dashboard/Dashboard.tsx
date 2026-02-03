@@ -8,6 +8,7 @@ export default function Dashboard() {
     const [parkingSpots, setParkingSpots] = useState<ParkingSpot[]>([]);
     const [loading, setLoading] = useState(true);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [noDistrictMessage, setNoDistrictMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -16,25 +17,38 @@ export default function Dashboard() {
 
     const loadDashboardData = async () => {
         try {
-            const [user, spots] = await Promise.all([
+            const [user, parkingSpots] = await Promise.all([
                 getUserInfo(),
                 getParkingSpots()
             ]);
 
             setUserInfo(user);
-            setParkingSpots(spots);
+
+            if (parkingSpots && 'message' in parkingSpots) {
+                setParkingSpots([]);
+                setNoDistrictMessage(parkingSpots.message);
+            }
+            else{
+                setParkingSpots(parkingSpots);
+                setNoDistrictMessage(null);
+            }
+
             setLoading(false);
         } catch (error) {
             console.error('Error loading dashboard data:', error);
             localStorage.removeItem('token');
+            localStorage.removeItem('role');
             navigate('/login');
         }
     };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('role');
         navigate('/login');
     };
+
+    const userRole = localStorage.getItem('role');
 
     if (loading) {
         return <div className='loading'>Ładowanie...</div>;
@@ -69,10 +83,14 @@ export default function Dashboard() {
                 </div>
 
                 <nav className="menu">
-                    <button className="menu-item active">🅿️ Moje rezerwacje</button>
-                    <button className="menu-item">📋 Ustawienia</button>
-                    <button className="menu-item">📜 Historia rezerwacji</button>
-                    <button className="menu-item logout" onClick={handleLogout}>Wyloguj się</button>
+                    {(userRole === "Admin" || userRole === "SuperAdmin") && (
+                        <button className="menu-item"><i className='bi bi-people'></i> Panel administracyjny</button>
+                    )}
+                    <button className="menu-item active"><i className='bi bi-p-square'></i>Dostępne miejsca</button>
+                    <button className="menu-item active"><i className='bi bi-car-front'></i> Moje rezerwacje</button>
+                    <button className="menu-item"><i className='bi bi-clock-history'></i> Historia rezerwacji</button>
+                    <button className="menu-item"><i className='bi bi-gear'></i> Ustawienia</button>
+                    <button className="menu-item logout" onClick={handleLogout}><i className='bi bi-box-arrow-right'></i> Wyloguj się</button>
                 </nav>
             </aside>
             

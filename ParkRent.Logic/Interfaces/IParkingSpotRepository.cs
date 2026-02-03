@@ -14,5 +14,9 @@ namespace ParkRent.Logic.Repository
         Task<IEnumerable<ParkingSpot>> GetAvailableAsync();
         Task UpdateAsync(ParkingSpot parkingSpot);
         Task <IEnumerable<ParkingSpot>> GetByDistrictIdAsync(Guid districtId);
+        Task AddAsync(ParkingSpot parking);
+        Task DeleteAsync(ParkingSpot parking);
+        Task<IEnumerable<ParkingSpot>> GetByOwnerIdAsync(Guid userId);
+
     }
 }

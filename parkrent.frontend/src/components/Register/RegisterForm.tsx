@@ -75,7 +75,7 @@ export default function RegisterForm({ onBackClick }: { onBackClick?: () => void
                 </button>
 
                 <p className = "info-text">
-                    Po rejestracji, na podany adres email zostanie wyslany link aktywacyjny.
+                    Jeśli jesteś mieszkańcem osiedla, skontaktuj się ze swoim administratorem w celu dodania do osiedla.
                 </p>
 
                 <p className = "back">
