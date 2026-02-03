@@ -29,6 +29,7 @@ namespace ParkRent.Storage.Repository
         public async Task<IEnumerable<ParkingSpot>> GetAvailableAsync()
         {
             return await _context.ParkingSpots
+                .Include(p =>p.District)
                 .Where(p => p.IsAvailable)
                 .ToListAsync();
         }
@@ -36,7 +37,8 @@ namespace ParkRent.Storage.Repository
         public async Task<IEnumerable<ParkingSpot>> GetByDistrictIdAsync(Guid districtId)
         {
             return await _context.ParkingSpots
-                .Include (p => p.DistrictId ==  districtId)
+                .Include(p=>p.District)
+                .Where (p => p.DistrictId ==  districtId)
                 .ToListAsync();
         }
 

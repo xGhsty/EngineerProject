@@ -86,8 +86,8 @@ export default function Dashboard() {
                     {(userRole === "Admin" || userRole === "SuperAdmin") && (
                         <button className="menu-item"><i className='bi bi-people'></i> Panel administracyjny</button>
                     )}
-                    <button className="menu-item active"><i className='bi bi-p-square'></i>Dostępne miejsca</button>
-                    <button className="menu-item active"><i className='bi bi-car-front'></i> Moje rezerwacje</button>
+                    <button className="menu-item"><i className='bi bi-p-square'></i>Dostępne miejsca</button>
+                    <button className="menu-item"><i className='bi bi-car-front'></i> Moje rezerwacje</button>
                     <button className="menu-item"><i className='bi bi-clock-history'></i> Historia rezerwacji</button>
                     <button className="menu-item"><i className='bi bi-gear'></i> Ustawienia</button>
                     <button className="menu-item logout" onClick={handleLogout}><i className='bi bi-box-arrow-right'></i> Wyloguj się</button>
