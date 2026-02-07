@@ -84,7 +84,7 @@ export default function Dashboard() {
 
                 <nav className="menu">
                     {(userRole === "Admin" || userRole === "SuperAdmin") && (
-                        <button className="menu-item"><i className='bi bi-people'></i> Panel administracyjny</button>
+                        <button className="menu-item-admin"><i className='bi bi-people'></i> Panel administracyjny</button>
                     )}
                     <button className="menu-item"><i className='bi bi-p-square'></i>Dostępne miejsca</button>
                     <button className="menu-item"><i className='bi bi-car-front'></i> Moje rezerwacje</button>

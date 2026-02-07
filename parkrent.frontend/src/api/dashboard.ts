@@ -1,15 +1,4 @@
-import axios from 'axios';
-
-const API_URL = 'https://localhost:8081/api';
-
-const getAuthHeader = () => {
-    const token = localStorage.getItem('token');
-    return {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    };
-};
+import { apiClient } from "./apiClient";
 
 export interface UserInfo {
     userId: string;
@@ -32,21 +21,21 @@ export interface ParkingSpot {
 }
 
 export const getUserInfo = async (): Promise<UserInfo> => {
-    const response = await axios.get<UserInfo>(`${API_URL}/dashboard/user-info`, getAuthHeader());
+    const response = await apiClient.get<UserInfo>(`/dashboard/user-info`);
     return response.data;
 };
 
 export const getParkingSpots = async (): Promise<ParkingSpot[] | NoParkingSpots> => {
-    const response = await axios.get<ParkingSpot[]>(`${API_URL}/dashboard/parking-spots`, getAuthHeader());
+    const response = await apiClient.get<ParkingSpot[]>(`/dashboard/parking-spots`);
     return response.data;
 };
 
 export const getMyReservations = async () => {
-    const response = await axios.get(`${API_URL}/dashboard/my-reservations`, getAuthHeader());
+    const response = await apiClient.get(`/dashboard/my-reservations`);
     return response.data;
 }
 
 export const getReservationHistory = async () => {
-    const response = await axios.get(`${API_URL}/dashboard/reservation-history`, getAuthHeader());
+    const response = await apiClient.get(`/dashboard/reservation-history`);
     return response.data;
 }

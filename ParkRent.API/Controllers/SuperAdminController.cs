@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ParkRent.Common.Storage.Enums;
 using ParkRent.Functionality.Dto;
 using ParkRent.Logic.Entities;
 using ParkRent.Logic.Repository;
+using ParkRent.Storage.Entities;
 using ParkRent.Storage.Interfaces;
 using System.Security.Claims;
 
@@ -10,14 +12,14 @@ namespace ParkRent.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "DistrictAdmin")]
-    public class DistrictAdminController : ControllerBase
+    [Authorize(Roles = "SuperAdmin")]
+    public class SuperAdminController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
         private readonly IDistrictRepository _districtRepository;
         private readonly IParkingSpotRepository _parkingSpotRepository;
 
-        public DistrictAdminController(IUserRepository userRepository, IDistrictRepository districtRepository,IParkingSpotRepository parkingSpotRepository)
+        public SuperAdminController(IUserRepository userRepository, IDistrictRepository districtRepository, IParkingSpotRepository parkingSpotRepository)
         {
             _userRepository = userRepository;
             _districtRepository = districtRepository;
@@ -25,19 +27,11 @@ namespace ParkRent.API.Controllers
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetUsersFromMyDistrict()
+        public async Task<IActionResult> GetAllUsers()
         {
             try
             {
-                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
-
-                if (currentUser == null || currentUser.DistrictId == null)
-                {
-                    return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
-                }
-
-                var users = await _userRepository.GetByDistrictIdAsync(currentUser.DistrictId.Value);
+                var users = await _userRepository.GetAllAsync();
 
                 return Ok(users.Select(u => new
                 {
@@ -57,28 +51,26 @@ namespace ParkRent.API.Controllers
             }
         }
 
-        [HttpPut("assign-district/{userId}")]
-        public async Task<IActionResult> AssignUserToMyDistrict(Guid userId, [FromBody] AssignDistrictRequest request)
+        [HttpPost("create-admin")]
+        public async Task<IActionResult> CreateDistrictAdmin([FromBody] CreateAdminRequest request)
         {
             try
             {
-                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
-
-                if (currentUser == null || currentUser.DistrictId == null)
+                var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+                if (existingUser != null)
                 {
-                    return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
+                    return BadRequest(new { message = "Użytkownik z tym adresem email już istnieje" });
                 }
 
-                if (request.DistrictId != currentUser.DistrictId)
+                var existingUsername = await _userRepository.GetByUsernameAsync(request.Username);
+                if (existingUsername != null)
                 {
-                    return Forbid();
+                    return BadRequest(new { message = "Nazwa użytkownika jest już zajęta" });
                 }
 
-                var user = await _userRepository.GetByIdAsync(userId);
-                if (user == null)
+                if (request.Password != request.ConfirmPassword)
                 {
-                    return NotFound(new { message = "Użytkownik nie istnieje" });
+                    return BadRequest(new { message = "Hasła nie są zgodne" });
                 }
 
                 var district = await _districtRepository.GetByIdAsync(request.DistrictId);
@@ -87,18 +79,32 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Dzielnica nie istnieje" });
                 }
 
-                user.DistrictId = request.DistrictId;
-                await _userRepository.UpdateAsync(user);
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                var newAdmin = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name,
+                    Surname = request.Surname,
+                    Username = request.Username,
+                    Email = request.Email,
+                    Password = hashedPassword,
+                    DistrictId = request.DistrictId,
+                    Role = UserRole.Admin
+                };
+
+                await _userRepository.AddAsync(newAdmin);
 
                 return Ok(new
                 {
-                    message = $"Użytkownik {user.Username} przypisany do dzielnicy {district.Name}",
-                    user = new
+                    message = $"Admin dzielnicy {district.Name} utworzony",
+                    admin = new
                     {
-                        id = user.Id,
-                        username = user.Username,
-                        email = user.Email,
-                        districtName = district.Name
+                        id = newAdmin.Id,
+                        username = newAdmin.Username,
+                        email = newAdmin.Email,
+                        districtName = district.Name,
+                        role = newAdmin.Role.ToString()
                     }
                 });
             }
@@ -108,20 +114,92 @@ namespace ParkRent.API.Controllers
             }
         }
 
-        [HttpGet("parking-spots")]
-        public async Task<IActionResult> GetParkingSpotsFromMyDistrict()
+        [HttpPut("change-role/{userId}")]
+        public async Task<IActionResult> ChangeUserRole(Guid userId, [FromBody] ChangeRoleRequest request)
         {
             try
             {
-                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
-
-                if (currentUser == null || currentUser.DistrictId == null)
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
                 {
-                    return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
+                    return NotFound(new { message = "Użytkownik nie istnieje" });
                 }
 
-                var parkingSpots = await _parkingSpotRepository.GetByDistrictIdAsync(currentUser.DistrictId.Value);
+                user.Role = request.Role;
+                await _userRepository.UpdateAsync(user);
+
+                return Ok(new
+                {
+                    message = $"Rola użytkownika {user.Username} zmieniona na {user.Role}",
+                    user = new
+                    {
+                        id = user.Id,
+                        username = user.Username,
+                        email = user.Email,
+                        role = user.Role.ToString()
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("districts")]
+        public async Task<IActionResult> CreateDistrict([FromBody] CreateDistrictRequest request)
+        {
+            try
+            {
+                var district = new District
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name
+                };
+
+                await _districtRepository.AddAsync(district);
+
+                return Ok(new
+                {
+                    message = $"Dzielnica {district.Name} utworzona",
+                    district = new
+                    {
+                        id = district.Id,
+                        name = district.Name
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("districts")]
+        public async Task<IActionResult> GetDistricts()
+        {
+            try
+            {
+                var districts = await _districtRepository.GetAllAsync();
+
+                return Ok(districts.Select(d => new
+                {
+                    id = d.Id,
+                    name = d.Name
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("parking-spots")]
+        public async Task<IActionResult> GetAllParkingSpots()
+        {
+            try
+            {
+                var parkingSpots = await _parkingSpotRepository.GetAllAsync();
 
                 return Ok(parkingSpots.Select(ps => new
                 {
@@ -145,19 +223,6 @@ namespace ParkRent.API.Controllers
         {
             try
             {
-                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
-
-                if (currentUser == null || currentUser.DistrictId == null)
-                {
-                    return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
-                }
-
-                if (request.DistrictId != currentUser.DistrictId)
-                {
-                    return Forbid();
-                }
-
                 var district = await _districtRepository.GetByIdAsync(request.DistrictId);
                 if (district == null)
                 {
@@ -212,23 +277,10 @@ namespace ParkRent.API.Controllers
         {
             try
             {
-                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
-
-                if (currentUser == null || currentUser.DistrictId == null)
-                {
-                    return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
-                }
-
                 var parkingSpot = await _parkingSpotRepository.GetByIdAsync(parkingSpotId);
                 if (parkingSpot == null)
                 {
                     return NotFound(new { message = "Miejsce parkingowe nie istnieje" });
-                }
-
-                if (parkingSpot.DistrictId != currentUser.DistrictId)
-                {
-                    return Forbid();
                 }
 
                 var hasActiveReservations = parkingSpot.Reservations?.Any(r =>
@@ -250,18 +302,37 @@ namespace ParkRent.API.Controllers
             }
         }
 
-        [HttpGet("districts")]
-        public async Task<IActionResult> GetDistricts()
+        [HttpPut("assign-district/{userId}")]
+        public async Task<IActionResult> AssignUserToDistrict(Guid userId, [FromBody] AssignDistrictRequest request)
         {
             try
             {
-                var districts = await _districtRepository.GetAllAsync();
-
-                return Ok(districts.Select(d => new
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
                 {
-                    id = d.Id,
-                    name = d.Name
-                }));
+                    return NotFound(new { message = "Użytkownik nie istnieje" });
+                }
+
+                var district = await _districtRepository.GetByIdAsync(request.DistrictId);
+                if (district == null)
+                {
+                    return NotFound(new { message = "Dzielnica nie istnieje" });
+                }
+
+                user.DistrictId = request.DistrictId;
+                await _userRepository.UpdateAsync(user);
+
+                return Ok(new
+                {
+                    message = $"Użytkownik {user.Username} przypisany do dzielnicy {district.Name}",
+                    user = new
+                    {
+                        id = user.Id,
+                        username = user.Username,
+                        email = user.Email,
+                        districtName = district.Name
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -274,24 +345,10 @@ namespace ParkRent.API.Controllers
         {
             try
             {
-                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
-
-                if (currentUser == null || currentUser.DistrictId == null)
-                {
-                    return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
-                }
-
                 var parkingSpot = await _parkingSpotRepository.GetByIdAsync(request.ParkingSpotId);
                 if (parkingSpot == null)
                 {
                     return NotFound(new { message = "Miejsce parkingowe nie istnieje" });
-                }
-
-                // DistrictAdmin może przypisać tylko parkingi ze swojej dzielnicy
-                if (parkingSpot.DistrictId != currentUser.DistrictId)
-                {
-                    return Forbid();
                 }
 
                 var user = await _userRepository.GetByIdAsync(request.UserId);

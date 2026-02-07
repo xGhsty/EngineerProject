@@ -154,6 +154,26 @@
   flex: 1;
 }
 
+.menu-item-admin {
+  background: none;
+  border: none;
+  color: white;
+  padding: 15px 20px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 16px;
+  background: rgb(207, 177, 7);
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-item-admin:hover {
+  background-color: #4caf50;
+}
+
 .menu-item {
   background: none;
   border: none;

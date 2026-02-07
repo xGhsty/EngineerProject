@@ -1,9 +1,7 @@
-import axios from 'axios';
-
-const API_URL = 'https://localhost:8081/api';
+import { apiClient } from "./apiClient";
 
 export async function login(email: string, password: string){
-    const response = await axios.post(`${API_URL}/auth/login`, {
+    const response = await apiClient.post(`/auth/login`, {
         email,
         password
     });
@@ -11,7 +9,7 @@ export async function login(email: string, password: string){
 }
 
 export const register = async (emails: string, password: string, name: string, surname: string, username: string, confirmPassword: string) => {
-    const response = await axios.post(`${API_URL}/auth/register`, {
+    const response = await apiClient.post(`/auth/register`, {
         Email: emails,
         Password: password,
         Name: name,

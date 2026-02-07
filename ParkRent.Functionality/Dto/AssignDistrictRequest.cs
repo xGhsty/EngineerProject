@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ParkRent.Functionality.Dto
 {
-    public class AssignDisctrictRequest
+    public class AssignDistrictRequest
     {
         public Guid DistrictId { get; set; }
     }
