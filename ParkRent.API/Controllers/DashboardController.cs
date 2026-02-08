@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ParkRent.Logic.Entities;
 using ParkRent.Logic.Repository;
+using ParkRent.Storage.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,12 +20,14 @@ namespace ParkRent.API.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IParkingSpotRepository _parkingSpotRepository;
         private readonly IReservationRepository _reservationRepository;
+        private readonly IDistrictRepository _districtRepository;
 
-        public DashboardController(IUserRepository userRepository, IParkingSpotRepository parkingSpotRepository, IReservationRepository reservationRepository)
+        public DashboardController(IUserRepository userRepository, IParkingSpotRepository parkingSpotRepository, IReservationRepository reservationRepository, IDistrictRepository districtRepository)
         {
             _userRepository = userRepository;
             _parkingSpotRepository = parkingSpotRepository;
             _reservationRepository = reservationRepository;
+            _districtRepository = districtRepository;
         }
 
         [HttpGet("user-info")]
@@ -94,6 +97,8 @@ namespace ParkRent.API.Controllers
                     id = p.Id,
                     name = p.Name,
                     isAvailable = p.IsAvailable,
+                    availableFrom = p.AvailableFrom?.ToString(@"hh\:mm"),
+                    availableTo = p.AvailableTo?.ToString(@"hh\:mm"),
                 }));
             }
             catch (Exception ex)
@@ -181,6 +186,47 @@ namespace ParkRent.API.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new {message  = ex.Message});
+            }
+        }
+
+        [HttpGet("parking-spots-by-district/{districtId}")]
+        public async Task<IActionResult> GetParkingSpotsByDistrict(Guid districtId)
+        {
+            try
+            {
+                var parkingSpots = await _parkingSpotRepository.GetByDistrictIdAsync(districtId);
+
+                return Ok(parkingSpots.Select(p => new
+                {
+                    id = p.Id,
+                    name = p.Name,
+                    isAvailable = p.IsAvailable,
+                    availableFrom = p.AvailableFrom?.ToString(@"hh\:mm"),
+                    availableTo = p.AvailableTo?.ToString(@"hh\:mm"),
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("districts")]
+        public async Task<IActionResult> GetDistricts()
+        {
+            try
+            {
+                var districts = await _districtRepository.GetAllAsync();
+
+                return Ok(districts.Select(d => new
+                {
+                    id = d.Id,
+                    name = d.Name
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

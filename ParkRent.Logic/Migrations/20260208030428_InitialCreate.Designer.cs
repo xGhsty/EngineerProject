@@ -12,7 +12,7 @@ using ParkRent.Logic;
 namespace ParkRent.Storage.Migrations
 {
     [DbContext(typeof(ParkRentDbContext))]
-    [Migration("20260203033225_InitialCreate")]
+    [Migration("20260208030428_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -30,6 +30,12 @@ namespace ParkRent.Storage.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeSpan?>("AvailableFrom")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan?>("AvailableTo")
+                        .HasColumnType("time");
 
                     b.Property<Guid>("DistrictId")
                         .HasColumnType("uniqueidentifier");

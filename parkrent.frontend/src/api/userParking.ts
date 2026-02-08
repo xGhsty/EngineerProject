@@ -5,6 +5,8 @@ export interface MyParkingSpot{
     name: string;
     isAvailable: boolean;
     districtName: string;
+    availableFrom?: string | null;
+    availableTo?: string | null;
     currentReservation?:{
         reservationId: string;
         userName: string;
@@ -40,5 +42,13 @@ export const toggleParkingSpotAvailability = async (parkingSpotId: string) =>{
 
 export const getMyReservations = async (): Promise<MyReservation[]> => {
     const response = await apiClient.get<MyReservation[]>('/userparking/my-reservations');
+    return response.data;
+};
+
+export const setAvailabilityHours = async (parkingSpotId: string, availableFrom: string, availableTo: string) => {
+    const response = await apiClient.put(`/userparking/set-availability-hours/${parkingSpotId}`, {
+        availableFrom: availableFrom || null,
+        availableTo: availableTo || null
+    });
     return response.data;
 };

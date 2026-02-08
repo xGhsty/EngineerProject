@@ -294,6 +294,18 @@ namespace ParkRent.API.Controllers
                     return Forbid();
                 }
 
+                // Jeśli UserId jest puste (Guid.Empty), usuń przypisanie
+                if (request.UserId == Guid.Empty)
+                {
+                    parkingSpot.UserId = null;
+                    parkingSpot.IsAvailable = true;
+                    parkingSpot.AvailableFrom = null;
+                    parkingSpot.AvailableTo = null;
+                    await _parkingSpotRepository.UpdateAsync(parkingSpot);
+
+                    return Ok(new { message = $"Usunięto przypisanie miejsca parkingowego {parkingSpot.Name}" });
+                }
+
                 var user = await _userRepository.GetByIdAsync(request.UserId);
                 if (user == null)
                 {

@@ -1,0 +1,118 @@
+.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 34px;
+    transition: all 0.4s ease;
+}
+
+.lock-icon,
+.unlock-icon {
+    position: absolute;
+    font-size: 11px;
+    color: #667eea;
+    z-index: 2;
+    top: 50%;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.lock-icon {
+    left: 6px;
+    transform: translateY(-50%) translateY(20px);
+    opacity: 0;
+}
+
+.lock-icon.active {
+    transform: translateY(-50%) translateY(0);
+    opacity: 1;
+}
+
+.unlock-icon {
+    left: 6px;
+    transform: translateY(-50%) translateY(20px);
+    opacity: 0;
+}
+
+.unlock-icon.active {
+    transform: translateY(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toggle-slider::before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+}
+
+.dark-mode .toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(24px);
+}
+
+.toggle-switch input:checked + .toggle-slider .lock-icon {
+    left: 30px;
+}
+
+.toggle-switch input:checked + .toggle-slider .unlock-icon {
+    left: 30px;
+}
+
+.toggle-switch input:not(:checked) + .toggle-slider {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toggle-switch input:disabled {
+    cursor: not-allowed;
+}
+
+.toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}

@@ -1,0 +1,140 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menospace, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Light Mode Variables (Default) */
+:root {
+  --bg-primary: #e8e8e8;
+  --bg-secondary: #f0f2f5;
+  --bg-card: #ffffff;
+  --text-primary: #3d4d5c;
+  --text-secondary: #999;
+  --border-color: #e0e0e0;
+  --sidebar-bg: #3d4d5c;
+  --sidebar-hover: #4a5a6f;
+  --green-primary: #4caf50;
+  --green-hover: #45a049;
+  --red-primary: #e74c3c;
+  --red-hover: #c0392b;
+  --shadow: rgba(0, 0, 0, 0.08);
+  --shadow-hover: rgba(0, 0, 0, 0.15);
+}
+
+/* Dark Mode Variables */
+.dark-mode {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-card: #0f3460;
+  --text-primary: #eaeaea;
+  --text-secondary: #b0b0b0;
+  --border-color: #2a2a3e;
+  --sidebar-bg: #0f1419;
+  --sidebar-hover: #1a1f2e;
+  --green-primary: #4caf50;
+  --green-hover: #45a049;
+  --red-primary: #e74c3c;
+  --red-hover: #c0392b;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --shadow-hover: rgba(0, 0, 0, 0.5);
+}
+
+/* Apply dark mode styles globally */
+.dark-mode {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark-mode .dashboard,
+.dark-mode .admin-panel-container,
+.dark-mode .page-container {
+  background-color: var(--bg-primary);
+}
+
+.dark-mode .sidebar {
+  background-color: var(--sidebar-bg);
+}
+
+.dark-mode .menu-item:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.dark-mode .parking-spot,
+.dark-mode .user-card,
+.dark-mode .parking-spot-card,
+.dark-mode .district-card,
+.dark-mode .create-spot-form,
+.dark-mode .reservation-card,
+.dark-mode .empty-state {
+  background-color: var(--bg-card);
+  box-shadow: 0 2px 12px var(--shadow);
+}
+
+.dark-mode .parking-spot:hover,
+.dark-mode .user-card:hover,
+.dark-mode .parking-spot-card:hover,
+.dark-mode .district-card:hover,
+.dark-mode .reservation-card:hover {
+  box-shadow: 0 4px 20px var(--shadow-hover);
+}
+
+.dark-mode .spot-name,
+.dark-mode .admin-title,
+.dark-mode .page-header h1,
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode .user-info-card h3,
+.dark-mode .spot-card-header h3,
+.dark-mode .district-card h3,
+.dark-mode .parking-name h3 {
+  color: var(--text-primary);
+}
+
+.dark-mode .form-input,
+.dark-mode .form-select,
+.dark-mode .control-select,
+.dark-mode .assign-select,
+.dark-mode .district-select {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .tab-button {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .back-button {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .back-button:hover {
+  background-color: var(--text-primary);
+  color: var(--bg-card);
+}
+
+.dark-mode .info-banner {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+}
+
+.dark-mode .district-selector {
+  background-color: var(--bg-card);
+}
+
+.dark-mode .district-selector label {
+  color: var(--text-primary);
+}

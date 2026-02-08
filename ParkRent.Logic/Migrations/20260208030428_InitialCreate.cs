@@ -62,6 +62,8 @@ namespace ParkRent.Storage.Migrations
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsAvailable = table.Column<bool>(type: "bit", nullable: false),
+                    AvailableFrom = table.Column<TimeSpan>(type: "time", nullable: true),
+                    AvailableTo = table.Column<TimeSpan>(type: "time", nullable: true),
                     DistrictId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>

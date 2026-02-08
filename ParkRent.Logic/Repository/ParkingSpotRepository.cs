@@ -23,6 +23,7 @@ namespace ParkRent.Storage.Repository
         {
             return await _context.ParkingSpots
                 .Include(p => p.User)
+                .Include(p => p.District)
                 .ToListAsync();
         }
 

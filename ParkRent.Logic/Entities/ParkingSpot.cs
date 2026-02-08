@@ -19,6 +19,10 @@ namespace ParkRent.Logic.Entities
         public string Name { get; set; }
 
         public bool IsAvailable { get; set; }
+
+        public TimeSpan? AvailableFrom { get; set; }
+        public TimeSpan? AvailableTo { get; set; }
+
         [Required]
         [ForeignKey("Districts")]
         public Guid DistrictId { get; set; }

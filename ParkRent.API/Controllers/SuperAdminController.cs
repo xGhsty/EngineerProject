@@ -313,6 +313,25 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Użytkownik nie istnieje" });
                 }
 
+                // Jeśli DistrictId jest puste (Guid.Empty lub null), usuń przypisanie
+                if (request.DistrictId == Guid.Empty || request.DistrictId == null)
+                {
+                    user.DistrictId = null;
+                    await _userRepository.UpdateAsync(user);
+
+                    return Ok(new
+                    {
+                        message = $"Usunięto przypisanie dzielnicy dla użytkownika {user.Username}",
+                        user = new
+                        {
+                            id = user.Id,
+                            username = user.Username,
+                            email = user.Email,
+                            districtName = (string?)null
+                        }
+                    });
+                }
+
                 var district = await _districtRepository.GetByIdAsync(request.DistrictId);
                 if (district == null)
                 {
@@ -349,6 +368,18 @@ namespace ParkRent.API.Controllers
                 if (parkingSpot == null)
                 {
                     return NotFound(new { message = "Miejsce parkingowe nie istnieje" });
+                }
+
+                // Jeśli UserId jest puste (Guid.Empty), usuń przypisanie
+                if (request.UserId == Guid.Empty)
+                {
+                    parkingSpot.UserId = null;
+                    parkingSpot.IsAvailable = true;
+                    parkingSpot.AvailableFrom = null;
+                    parkingSpot.AvailableTo = null;
+                    await _parkingSpotRepository.UpdateAsync(parkingSpot);
+
+                    return Ok(new { message = $"Usunięto przypisanie miejsca parkingowego {parkingSpot.Name}" });
                 }
 
                 var user = await _userRepository.GetByIdAsync(request.UserId);

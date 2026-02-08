@@ -28,6 +28,12 @@ namespace ParkRent.Storage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<TimeSpan?>("AvailableFrom")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan?>("AvailableTo")
+                        .HasColumnType("time");
+
                     b.Property<Guid>("DistrictId")
                         .HasColumnType("uniqueidentifier");
 

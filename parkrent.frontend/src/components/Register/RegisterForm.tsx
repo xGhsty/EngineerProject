@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { register } from "../../api/auth";
 import "./RegisterForm.css";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,11 @@ export default function RegisterForm({ onBackClick }: { onBackClick?: () => void
     const [Username, setUsername] = useState("");
     const [ConfirmPassword, setConfirmPassword] = useState("");
     const navigate = useNavigate();
+
+    // Wymuszaj light mode na stronie rejestracji
+    useEffect(() => {
+        document.documentElement.classList.remove('dark-mode');
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

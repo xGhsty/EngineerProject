@@ -98,11 +98,12 @@ namespace ParkRent.API
                 {
                     var context = services.GetRequiredService<ParkRentDbContext>();
                     context.Database.Migrate();
+
                 }
                 catch (Exception ex)
                 {
                     var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "B³¹d podczas inicjalizacji bazy danych");
+                    logger.LogError(ex, "BÅ‚Ä…d podczas inicjalizacji bazy danych");
                 }
             }
 

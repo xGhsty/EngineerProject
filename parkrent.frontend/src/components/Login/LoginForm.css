@@ -25,6 +25,29 @@
     flex-direction: column;
     gap: 15px;
   }
+
+  .error-message {
+    background-color: #ffdddd;
+    color: #d8000c;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #d8000c;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
   
   .input {
     padding: 10px;

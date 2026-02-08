@@ -48,7 +48,30 @@ namespace ParkRent.API.Controllers
                     return BadRequest(new { message = "Data końcowa nie może być wcześniej niż data początkowa" });
                 }
 
-                if (request.StartTime < DateTime.UtcNow)
+                // Sprawdzenie czy rezerwacja mieści się w godzinach dostępności
+                if (parkingSpot.AvailableFrom.HasValue && parkingSpot.AvailableTo.HasValue)
+                {
+                    var startTimeOfDay = request.StartTime.TimeOfDay;
+                    var endTimeOfDay = request.EndTime.TimeOfDay;
+
+                    if (startTimeOfDay < parkingSpot.AvailableFrom.Value || startTimeOfDay >= parkingSpot.AvailableTo.Value)
+                    {
+                        return BadRequest(new {
+                            message = $"Miejsce jest dostępne tylko w godzinach {parkingSpot.AvailableFrom:hh\\:mm} - {parkingSpot.AvailableTo:hh\\:mm}"
+                        });
+                    }
+
+                    if (endTimeOfDay > parkingSpot.AvailableTo.Value || endTimeOfDay <= parkingSpot.AvailableFrom.Value)
+                    {
+                        return BadRequest(new {
+                            message = $"Miejsce jest dostępne tylko w godzinach {parkingSpot.AvailableFrom:hh\\:mm} - {parkingSpot.AvailableTo:hh\\:mm}"
+                        });
+                    }
+                }
+
+                // Dodanie bufora 5 minut, żeby uwzględnić różnice w strefach czasowych
+                var minimumStartTime = DateTime.UtcNow.AddMinutes(-5);
+                if (request.StartTime < minimumStartTime)
                 {
                     return BadRequest(new { message = "Data rezerwacji nie może być wsteczna" });
                 }

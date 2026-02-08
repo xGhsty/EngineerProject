@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ParkRent.Logic.Entities;
 using ParkRent.Logic.Repository;
 using System.Security.Claims;
 
@@ -35,24 +36,26 @@ namespace ParkRent.API.Controllers
                     name = mp.Name,
                     isAvailable = mp.IsAvailable,
                     districtName = mp.District?.Name,
+                    availableFrom = mp.AvailableFrom?.ToString(@"hh\:mm"),
+                    availableTo = mp.AvailableTo?.ToString(@"hh\:mm"),
                     currentReservation = mp.Reservations?
                         .Where(r => r.ReservationStartTime <= DateTime.UtcNow && r.ReservationEndTime > DateTime.UtcNow)
                         .OrderBy(r => r.ReservationStartTime)
                         .Select(r => new
                         {
-                            id = r.Id,
+                            reservationId = r.Id,
                             userName = r.User != null ? $"{r.User.Name} {r.User.Surname}" : "Nieznany",
                             startTime = r.ReservationStartTime,
                             endTime = r.ReservationEndTime,
                         })
                         .FirstOrDefault(),
-                    incomingReservation = mp.Reservations?
+                    incomingReservations = (mp.Reservations ?? Enumerable.Empty<Reservation>())
                         .Where(r => r.ReservationStartTime > DateTime.UtcNow)
-                        .OrderBy(r => r.ReservationEndTime)
-                        .Select(r => new
+                        .OrderBy(r => r.ReservationStartTime)
+                        .Select(r => (object)new
                         {
-                            id = r.Id,
-                            username = r.User != null ? $"{r.User.Name} {r.User.Surname}" : "Nieznany",
+                            reservationId = r.Id,
+                            userName = r.User != null ? $"{r.User.Name} {r.User.Surname}" : "Nieznany",
                             startTime = r.ReservationStartTime,
                             endTime = r.ReservationEndTime,
                         })
@@ -79,15 +82,15 @@ namespace ParkRent.API.Controllers
                     .OrderByDescending(r => r.ReservationStartTime)
                     .Select(r => new
                     {
-                        id = r.Id,
+                        reservationId = r.Id,
                         parkingSpotName = r.ParkingSpot?.Name,
-                        districtName = r.ParkingSpot.District,
+                        districtName = r.ParkingSpot?.District?.Name,
                         startTime = r.ReservationStartTime,
                         endTime = r.ReservationEndTime,
                         status = r.ReservationEndTime < DateTime.UtcNow ? "Zakończona"
                             : r.ReservationStartTime > DateTime.UtcNow ? "Nadchodząca"
                             : "Aktywna",
-                        ableToCancel = r.ReservationEndTime > DateTime.UtcNow
+                        canCancel = r.ReservationEndTime > DateTime.UtcNow
                     }));
             }
             catch (Exception ex)
@@ -96,7 +99,7 @@ namespace ParkRent.API.Controllers
             }
         }
 
-        [HttpPut("toggle-available-parkingspot/{parkingSpotId}")]
+        [HttpPut("toggle-availability/{parkingSpotId}")]
         public async Task<IActionResult> ToggleParkingSpot(Guid parkingSpotId)
         {
             try
@@ -110,7 +113,7 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Miejsce parkingowe nie istnieje" });
                 }
 
-                if(parkingSpot.UserId == userId)
+                if(parkingSpot.UserId != userId)
                 {
                     return Forbid();
                 }
@@ -141,6 +144,63 @@ namespace ParkRent.API.Controllers
             }
         }
 
+        [HttpPut("set-availability-hours/{parkingSpotId}")]
+        public async Task<IActionResult> SetAvailabilityHours(Guid parkingSpotId, [FromBody] SetAvailabilityHoursRequest request)
+        {
+            try
+            {
+                var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var parkingSpot = await _parkingSpotRepository.GetByIdAsync(parkingSpotId);
+
+                if (parkingSpot == null)
+                {
+                    return NotFound(new { message = "Miejsce parkingowe nie istnieje" });
+                }
+
+                if (parkingSpot.UserId != userId)
+                {
+                    return Forbid();
+                }
+
+                // Parsowanie godzin z formatu "HH:mm"
+                if (!string.IsNullOrEmpty(request.AvailableFrom) && !string.IsNullOrEmpty(request.AvailableTo))
+                {
+                    if (TimeSpan.TryParse(request.AvailableFrom, out var from) && TimeSpan.TryParse(request.AvailableTo, out var to))
+                    {
+                        parkingSpot.AvailableFrom = from;
+                        parkingSpot.AvailableTo = to;
+                        // Ustawienie miejsca jako dostępne gdy są godziny dostępności
+                        parkingSpot.IsAvailable = true;
+                    }
+                    else
+                    {
+                        return BadRequest(new { message = "Nieprawidłowy format godzin. Użyj formatu HH:mm" });
+                    }
+                }
+                else
+                {
+                    // Jeśli pola są puste, usuń ograniczenia czasowe
+                    parkingSpot.AvailableFrom = null;
+                    parkingSpot.AvailableTo = null;
+                }
+
+                await _parkingSpotRepository.UpdateAsync(parkingSpot);
+
+                return Ok(new
+                {
+                    message = parkingSpot.AvailableFrom.HasValue
+                        ? $"Godziny dostępności ustawione: {parkingSpot.AvailableFrom:hh\\:mm} - {parkingSpot.AvailableTo:hh\\:mm}"
+                        : "Usunięto ograniczenia godzinowe",
+                    availableFrom = parkingSpot.AvailableFrom?.ToString(@"hh\:mm"),
+                    availableTo = parkingSpot.AvailableTo?.ToString(@"hh\:mm")
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpDelete("{reservationId}")]
         public async Task<IActionResult> CancelReservation(Guid reservationId)
         {
@@ -161,10 +221,16 @@ namespace ParkRent.API.Controllers
             {
                 return BadRequest(new { message = "Nie można anulować zakończonej rezerwacji" });
             }
-            
+
             await _reservationRepository.DeleteAsync(reservation);
 
             return Ok(new { message = "Rezerwacja anulowana" });
         }
+    }
+
+    public class SetAvailabilityHoursRequest
+    {
+        public string? AvailableFrom { get; set; }
+        public string? AvailableTo { get; set; }
     }
 }
