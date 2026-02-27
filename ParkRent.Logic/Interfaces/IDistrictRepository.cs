@@ -13,5 +13,6 @@ namespace ParkRent.Storage.Interfaces
         Task<IEnumerable<District>> GetAllAsync();
         Task AddAsync(District district);
         Task UpdateAsync(District district);
+        Task DeleteAsync(District district);
     }
 }

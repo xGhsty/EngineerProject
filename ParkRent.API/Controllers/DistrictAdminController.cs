@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ParkRent.Common.Storage.Enums;
 using ParkRent.Functionality.Dto;
 using ParkRent.Logic.Entities;
 using ParkRent.Logic.Repository;
@@ -10,22 +11,24 @@ namespace ParkRent.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "DistrictAdmin")]
+    [Authorize(Roles = "Admin")]
     public class DistrictAdminController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
         private readonly IDistrictRepository _districtRepository;
         private readonly IParkingSpotRepository _parkingSpotRepository;
+        private readonly IReservationRepository _reservationRepository;
 
-        public DistrictAdminController(IUserRepository userRepository, IDistrictRepository districtRepository,IParkingSpotRepository parkingSpotRepository)
+        public DistrictAdminController(IUserRepository userRepository, IDistrictRepository districtRepository, IParkingSpotRepository parkingSpotRepository, IReservationRepository reservationRepository)
         {
             _userRepository = userRepository;
             _districtRepository = districtRepository;
             _parkingSpotRepository = parkingSpotRepository;
+            _reservationRepository = reservationRepository;
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetUsersFromMyDistrict()
+        public async Task<IActionResult> GetAllUsers()
         {
             try
             {
@@ -37,19 +40,24 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
                 }
 
-                var users = await _userRepository.GetByDistrictIdAsync(currentUser.DistrictId.Value);
+                var users = await _userRepository.GetAllAsync();
 
-                return Ok(users.Select(u => new
-                {
-                    id = u.Id,
-                    name = u.Name,
-                    surname = u.Surname,
-                    username = u.Username,
-                    email = u.Email,
-                    districtId = u.DistrictId,
-                    districtName = u.District?.Name,
-                    role = u.Role.ToString()
-                }));
+                // Tylko zwykli użytkownicy bez przypisania LUB z przypisaniem do własnej dzielnicy admina
+                return Ok(users
+                    .Where(u => u.Role == UserRole.User &&
+                                (u.DistrictId == null || u.DistrictId == currentUser.DistrictId))
+                    .Select(u => new
+                    {
+                        id = u.Id,
+                        name = u.Name,
+                        surname = u.Surname,
+                        username = u.Username,
+                        email = u.Email,
+                        districtId = u.DistrictId,
+                        districtName = u.District?.Name,
+                        role = u.Role.ToString(),
+                        createdAt = DateTime.SpecifyKind(u.CreatedAt, DateTimeKind.Utc)
+                    }));
             }
             catch (Exception ex)
             {
@@ -70,15 +78,44 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
                 }
 
-                if (request.DistrictId != currentUser.DistrictId)
-                {
-                    return Forbid();
-                }
-
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
                     return NotFound(new { message = "Użytkownik nie istnieje" });
+                }
+
+                // Usunięcie użytkownika z dzielnicy (Guid.Empty) — dozwolone jeśli użytkownik jest w dzielnicy admina
+                if (request.DistrictId == Guid.Empty)
+                {
+                    if (user.DistrictId != currentUser.DistrictId)
+                    {
+                        return Forbid();
+                    }
+
+                    var userSpots = await _parkingSpotRepository.GetByOwnerIdAsync(user.Id);
+                    foreach (var spot in userSpots)
+                    {
+                        spot.UserId = null;
+                        spot.IsAvailable = true;
+                        spot.AvailableFrom = null;
+                        spot.AvailableTo = null;
+                        await _parkingSpotRepository.UpdateAsync(spot);
+                    }
+
+                    user.DistrictId = null;
+                    await _userRepository.UpdateAsync(user);
+
+                    return Ok(new
+                    {
+                        message = $"Usunięto przypisanie dzielnicy dla użytkownika {user.Username}",
+                        user = new { id = user.Id, username = user.Username, districtName = (string?)null }
+                    });
+                }
+
+                // Przypisanie do własnej dzielnicy
+                if (request.DistrictId != currentUser.DistrictId)
+                {
+                    return Forbid();
                 }
 
                 var district = await _districtRepository.GetByIdAsync(request.DistrictId);
@@ -131,7 +168,9 @@ namespace ParkRent.API.Controllers
                     districtName = ps.District?.Name,
                     ownerId = ps.UserId,
                     ownerName = ps.User != null ? $"{ps.User.Name} {ps.User.Surname}" : null,
-                    isAvailable = ps.IsAvailable
+                    isAvailable = ps.IsAvailable,
+                    availableFrom = ps.AvailableFrom?.ToString(@"hh\:mm"),
+                    availableTo = ps.AvailableTo?.ToString(@"hh\:mm")
                 }));
             }
             catch (Exception ex)
@@ -269,6 +308,42 @@ namespace ParkRent.API.Controllers
             }
         }
 
+        [HttpGet("reservation-history")]
+        public async Task<IActionResult> GetReservationHistory()
+        {
+            try
+            {
+                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+
+                if (currentUser == null || currentUser.DistrictId == null)
+                {
+                    return NotFound(new { message = "Administrator nie jest przypisany do dzielnicy" });
+                }
+
+                var reservations = await _reservationRepository.GetByDistrictAsync(currentUser.DistrictId.Value);
+                var now = DateTime.UtcNow;
+
+                return Ok(reservations.Select(r => new
+                {
+                    id = r.Id,
+                    userName = $"{r.User?.Name} {r.User?.Surname} (@{r.User?.Username})",
+                    parkingSpotName = r.ParkingSpot?.Name,
+                    districtName = r.ParkingSpot?.District?.Name,
+                    startTime = DateTime.SpecifyKind(r.ReservationStartTime, DateTimeKind.Utc),
+                    endTime = DateTime.SpecifyKind(r.ReservationEndTime, DateTimeKind.Utc),
+                    status = r.IsCancelled ? "Anulowana"
+                        : r.ReservationEndTime < now ? "Zakończona"
+                        : r.ReservationStartTime <= now ? "Aktywna"
+                        : "Nadchodząca"
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPut("assign-parking")]
         public async Task<IActionResult> AssignParkingToUser([FromBody] AssignParkingRequest request)
         {
@@ -310,6 +385,11 @@ namespace ParkRent.API.Controllers
                 if (user == null)
                 {
                     return NotFound(new { message = "Użytkownik nie istnieje" });
+                }
+
+                if (user.DistrictId == null)
+                {
+                    return BadRequest(new { message = $"Użytkownik {user.Username} nie jest przypisany do żadnej dzielnicy" });
                 }
 
                 if (parkingSpot.DistrictId != user.DistrictId)

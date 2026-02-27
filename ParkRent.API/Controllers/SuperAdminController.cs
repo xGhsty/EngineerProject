@@ -18,12 +18,42 @@ namespace ParkRent.API.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IDistrictRepository _districtRepository;
         private readonly IParkingSpotRepository _parkingSpotRepository;
+        private readonly IReservationRepository _reservationRepository;
 
-        public SuperAdminController(IUserRepository userRepository, IDistrictRepository districtRepository, IParkingSpotRepository parkingSpotRepository)
+        public SuperAdminController(IUserRepository userRepository, IDistrictRepository districtRepository, IParkingSpotRepository parkingSpotRepository, IReservationRepository reservationRepository)
         {
             _userRepository = userRepository;
             _districtRepository = districtRepository;
             _parkingSpotRepository = parkingSpotRepository;
+            _reservationRepository = reservationRepository;
+        }
+
+        [HttpGet("reservation-history")]
+        public async Task<IActionResult> GetReservationHistory()
+        {
+            try
+            {
+                var reservations = await _reservationRepository.GetAllAsync();
+                var now = DateTime.UtcNow;
+
+                return Ok(reservations.Select(r => new
+                {
+                    id = r.Id,
+                    userName = $"{r.User?.Name} {r.User?.Surname} (@{r.User?.Username})",
+                    parkingSpotName = r.ParkingSpot?.Name,
+                    districtName = r.ParkingSpot?.District?.Name,
+                    startTime = DateTime.SpecifyKind(r.ReservationStartTime, DateTimeKind.Utc),
+                    endTime = DateTime.SpecifyKind(r.ReservationEndTime, DateTimeKind.Utc),
+                    status = r.IsCancelled ? "Anulowana"
+                        : r.ReservationEndTime < now ? "Zakończona"
+                        : r.ReservationStartTime <= now ? "Aktywna"
+                        : "Nadchodząca"
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("users")]
@@ -33,7 +63,7 @@ namespace ParkRent.API.Controllers
             {
                 var users = await _userRepository.GetAllAsync();
 
-                return Ok(users.Select(u => new
+                return Ok(users.Where(u => u.Role != UserRole.SuperAdmin).Select(u => new
                 {
                     id = u.Id,
                     name = u.Name,
@@ -42,7 +72,8 @@ namespace ParkRent.API.Controllers
                     email = u.Email,
                     districtId = u.DistrictId,
                     districtName = u.District?.Name,
-                    role = u.Role.ToString()
+                    role = u.Role.ToString(),
+                    createdAt = DateTime.SpecifyKind(u.CreatedAt, DateTimeKind.Utc)
                 }));
             }
             catch (Exception ex)
@@ -90,7 +121,8 @@ namespace ParkRent.API.Controllers
                     Email = request.Email,
                     Password = hashedPassword,
                     DistrictId = request.DistrictId,
-                    Role = UserRole.Admin
+                    Role = UserRole.Admin,
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 await _userRepository.AddAsync(newAdmin);
@@ -209,7 +241,9 @@ namespace ParkRent.API.Controllers
                     districtName = ps.District?.Name,
                     ownerId = ps.UserId,
                     ownerName = ps.User != null ? $"{ps.User.Name} {ps.User.Surname}" : null,
-                    isAvailable = ps.IsAvailable
+                    isAvailable = ps.IsAvailable,
+                    availableFrom = ps.AvailableFrom?.ToString(@"hh\:mm"),
+                    availableTo = ps.AvailableTo?.ToString(@"hh\:mm")
                 }));
             }
             catch (Exception ex)
@@ -272,6 +306,97 @@ namespace ParkRent.API.Controllers
             }
         }
 
+        [HttpDelete("districts/{districtId}")]
+        public async Task<IActionResult> DeleteDistrict(Guid districtId)
+        {
+            try
+            {
+                var district = await _districtRepository.GetByIdAsync(districtId);
+                if (district == null)
+                {
+                    return NotFound(new { message = "Dzielnica nie istnieje" });
+                }
+
+                // Usuń wszystkie miejsca parkingowe w tej dzielnicy (wraz z rezerwacjami)
+                var spots = (await _parkingSpotRepository.GetByDistrictIdAsync(districtId)).ToList();
+                foreach (var spot in spots)
+                {
+                    var spotReservations = (await _reservationRepository.GetByParkingSpotIdAsync(spot.Id)).ToList();
+                    foreach (var reservation in spotReservations)
+                    {
+                        await _reservationRepository.DeleteAsync(reservation);
+                    }
+                    await _parkingSpotRepository.DeleteAsync(spot);
+                }
+
+                // Odepnij użytkowników od tej dzielnicy
+                var users = (await _userRepository.GetByDistrictIdAsync(districtId)).ToList();
+                foreach (var user in users)
+                {
+                    user.DistrictId = null;
+                    await _userRepository.UpdateAsync(user);
+                }
+
+                await _districtRepository.DeleteAsync(district);
+
+                return Ok(new { message = $"Dzielnica {district.Name} została usunięta" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("users/{userId}")]
+        public async Task<IActionResult> DeleteUser(Guid userId)
+        {
+            try
+            {
+                var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId.ToString() == currentUserId)
+                {
+                    return BadRequest(new { message = "Nie możesz usunąć własnego konta z panelu admina" });
+                }
+
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "Użytkownik nie istnieje" });
+                }
+
+                if (user.Role == UserRole.SuperAdmin)
+                {
+                    return BadRequest(new { message = "Nie można usunąć konta Super Admina" });
+                }
+
+                // Usuń rezerwacje użytkownika
+                var userReservations = (await _reservationRepository.GetByUserIdAsync(userId)).ToList();
+                foreach (var reservation in userReservations)
+                {
+                    await _reservationRepository.DeleteAsync(reservation);
+                }
+
+                // Odepnij miejsca parkingowe użytkownika
+                var userSpots = (await _parkingSpotRepository.GetByOwnerIdAsync(userId)).ToList();
+                foreach (var spot in userSpots)
+                {
+                    spot.UserId = null;
+                    spot.IsAvailable = true;
+                    spot.AvailableFrom = null;
+                    spot.AvailableTo = null;
+                    await _parkingSpotRepository.UpdateAsync(spot);
+                }
+
+                await _userRepository.DeleteAsync(user);
+
+                return Ok(new { message = $"Użytkownik {user.Username ?? user.Name} został usunięty" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpDelete("parking-spots/{parkingSpotId}")]
         public async Task<IActionResult> DeleteParkingSpot(Guid parkingSpotId)
         {
@@ -313,8 +438,24 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Użytkownik nie istnieje" });
                 }
 
+                var newDistrictId = (request.DistrictId == Guid.Empty) ? (Guid?)null : request.DistrictId;
+
+                // Jeśli dzielnica się zmienia, odepnij miejsca parkingowe użytkownika
+                if (user.DistrictId != newDistrictId)
+                {
+                    var userSpots = await _parkingSpotRepository.GetByOwnerIdAsync(user.Id);
+                    foreach (var spot in userSpots)
+                    {
+                        spot.UserId = null;
+                        spot.IsAvailable = true;
+                        spot.AvailableFrom = null;
+                        spot.AvailableTo = null;
+                        await _parkingSpotRepository.UpdateAsync(spot);
+                    }
+                }
+
                 // Jeśli DistrictId jest puste (Guid.Empty lub null), usuń przypisanie
-                if (request.DistrictId == Guid.Empty || request.DistrictId == null)
+                if (newDistrictId == null)
                 {
                     user.DistrictId = null;
                     await _userRepository.UpdateAsync(user);
@@ -386,6 +527,11 @@ namespace ParkRent.API.Controllers
                 if (user == null)
                 {
                     return NotFound(new { message = "Użytkownik nie istnieje" });
+                }
+
+                if (user.DistrictId == null)
+                {
+                    return BadRequest(new { message = $"Użytkownik {user.Username} nie jest przypisany do żadnej dzielnicy" });
                 }
 
                 if (parkingSpot.DistrictId != user.DistrictId)

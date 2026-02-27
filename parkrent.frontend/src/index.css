@@ -17,9 +17,12 @@ code {
   --bg-primary: #e8e8e8;
   --bg-secondary: #f0f2f5;
   --bg-card: #ffffff;
+  --card-bg: #ffffff;
   --text-primary: #3d4d5c;
+  --text-color: #3d4d5c;
   --text-secondary: #999;
   --border-color: #e0e0e0;
+  --input-bg: #f5f5f5;
   --sidebar-bg: #3d4d5c;
   --sidebar-hover: #4a5a6f;
   --green-primary: #4caf50;
@@ -28,6 +31,11 @@ code {
   --red-hover: #c0392b;
   --shadow: rgba(0, 0, 0, 0.08);
   --shadow-hover: rgba(0, 0, 0, 0.15);
+  /* Accent: zielony w trybie jasnym */
+  --accent: #4caf50;
+  --accent-hover: #45a049;
+  --accent-light: rgba(76, 175, 80, 0.1);
+  --accent-border: rgba(76, 175, 80, 0.4);
 }
 
 /* Dark Mode Variables */
@@ -35,9 +43,12 @@ code {
   --bg-primary: #1a1a2e;
   --bg-secondary: #16213e;
   --bg-card: #0f3460;
+  --card-bg: #0f3460;
   --text-primary: #eaeaea;
+  --text-color: #eaeaea;
   --text-secondary: #b0b0b0;
   --border-color: #2a2a3e;
+  --input-bg: #16213e;
   --sidebar-bg: #0f1419;
   --sidebar-hover: #1a1f2e;
   --green-primary: #4caf50;
@@ -46,6 +57,11 @@ code {
   --red-hover: #c0392b;
   --shadow: rgba(0, 0, 0, 0.3);
   --shadow-hover: rgba(0, 0, 0, 0.5);
+  /* Accent: fioletowy w trybie ciemnym */
+  --accent: #667eea;
+  --accent-hover: #764ba2;
+  --accent-light: rgba(102, 126, 234, 0.1);
+  --accent-border: rgba(102, 126, 234, 0.4);
 }
 
 /* Apply dark mode styles globally */

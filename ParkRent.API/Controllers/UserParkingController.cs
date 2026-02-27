@@ -28,7 +28,7 @@ namespace ParkRent.API.Controllers
             try
             {
                 var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                var mySpots = await _parkingSpotRepository.GetByOwnerIdAsync(userId);
+                var mySpots = (await _parkingSpotRepository.GetByOwnerIdAsync(userId)).ToList();
 
                 return Ok(mySpots.Select(mp => new
                 {
@@ -39,25 +39,25 @@ namespace ParkRent.API.Controllers
                     availableFrom = mp.AvailableFrom?.ToString(@"hh\:mm"),
                     availableTo = mp.AvailableTo?.ToString(@"hh\:mm"),
                     currentReservation = mp.Reservations?
-                        .Where(r => r.ReservationStartTime <= DateTime.UtcNow && r.ReservationEndTime > DateTime.UtcNow)
+                        .Where(r => !r.IsCancelled && r.ReservationStartTime <= DateTime.UtcNow && r.ReservationEndTime > DateTime.UtcNow)
                         .OrderBy(r => r.ReservationStartTime)
                         .Select(r => new
                         {
                             reservationId = r.Id,
                             userName = r.User != null ? $"{r.User.Name} {r.User.Surname}" : "Nieznany",
-                            startTime = r.ReservationStartTime,
-                            endTime = r.ReservationEndTime,
+                            startTime = DateTime.SpecifyKind(r.ReservationStartTime, DateTimeKind.Utc),
+                            endTime = DateTime.SpecifyKind(r.ReservationEndTime, DateTimeKind.Utc),
                         })
                         .FirstOrDefault(),
                     incomingReservations = (mp.Reservations ?? Enumerable.Empty<Reservation>())
-                        .Where(r => r.ReservationStartTime > DateTime.UtcNow)
+                        .Where(r => !r.IsCancelled && r.ReservationStartTime > DateTime.UtcNow)
                         .OrderBy(r => r.ReservationStartTime)
                         .Select(r => (object)new
                         {
                             reservationId = r.Id,
                             userName = r.User != null ? $"{r.User.Name} {r.User.Surname}" : "Nieznany",
-                            startTime = r.ReservationStartTime,
-                            endTime = r.ReservationEndTime,
+                            startTime = DateTime.SpecifyKind(r.ReservationStartTime, DateTimeKind.Utc),
+                            endTime = DateTime.SpecifyKind(r.ReservationEndTime, DateTimeKind.Utc),
                         })
                         .ToList()
                 }));
@@ -85,12 +85,14 @@ namespace ParkRent.API.Controllers
                         reservationId = r.Id,
                         parkingSpotName = r.ParkingSpot?.Name,
                         districtName = r.ParkingSpot?.District?.Name,
-                        startTime = r.ReservationStartTime,
-                        endTime = r.ReservationEndTime,
-                        status = r.ReservationEndTime < DateTime.UtcNow ? "Zakończona"
+                        startTime = DateTime.SpecifyKind(r.ReservationStartTime, DateTimeKind.Utc),
+                        endTime = DateTime.SpecifyKind(r.ReservationEndTime, DateTimeKind.Utc),
+                        isCancelled = r.IsCancelled,
+                        status = r.IsCancelled ? "Anulowana"
+                            : r.ReservationEndTime < DateTime.UtcNow ? "Zakończona"
                             : r.ReservationStartTime > DateTime.UtcNow ? "Nadchodząca"
                             : "Aktywna",
-                        canCancel = r.ReservationEndTime > DateTime.UtcNow
+                        canCancel = !r.IsCancelled && r.ReservationEndTime > DateTime.UtcNow
                     }));
             }
             catch (Exception ex)
@@ -116,14 +118,6 @@ namespace ParkRent.API.Controllers
                 if(parkingSpot.UserId != userId)
                 {
                     return Forbid();
-                }
-
-                var isActiveReservation = parkingSpot.Reservations?.Any(r =>
-                    r.ReservationStartTime <= DateTime.UtcNow && r.ReservationEndTime > DateTime.UtcNow) ?? false;
-
-                if (isActiveReservation && parkingSpot.IsAvailable)
-                {
-                    return BadRequest(new { message = "Nie można wycofać miejsca z aktywną rezerwacją" });
                 }
 
                 parkingSpot.IsAvailable = !parkingSpot.IsAvailable;
@@ -160,6 +154,16 @@ namespace ParkRent.API.Controllers
                 if (parkingSpot.UserId != userId)
                 {
                     return Forbid();
+                }
+
+                // Blokada edycji godzin gdy istnieje aktywna lub nadchodząca rezerwacja
+                var now = DateTime.UtcNow;
+                var hasReservation = parkingSpot.Reservations?.Any(r =>
+                    !r.IsCancelled && r.ReservationEndTime > now) ?? false;
+
+                if (hasReservation)
+                {
+                    return BadRequest(new { message = "Nie można zmieniać godzin dostępności gdy istnieje aktywna lub nadchodząca rezerwacja" });
                 }
 
                 // Parsowanie godzin z formatu "HH:mm"
@@ -217,12 +221,19 @@ namespace ParkRent.API.Controllers
                 return Forbid();
             }
 
+            if(reservation.IsCancelled)
+            {
+                return BadRequest(new { message = "Rezerwacja jest już anulowana" });
+            }
+
             if(reservation.ReservationEndTime < DateTime.UtcNow)
             {
                 return BadRequest(new { message = "Nie można anulować zakończonej rezerwacji" });
             }
 
-            await _reservationRepository.DeleteAsync(reservation);
+            reservation.IsCancelled = true;
+            reservation.CancelledAt = DateTime.UtcNow;
+            await _reservationRepository.UpdateAsync(reservation);
 
             return Ok(new { message = "Rezerwacja anulowana" });
         }

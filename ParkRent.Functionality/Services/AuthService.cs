@@ -37,13 +37,13 @@ namespace ParkRent.Functionality.Services
 
             if (user == null)
             {
-                throw new UnauthorizedAccessException("Nieprawidłowy email lub hasło");
+                throw new UnauthorizedAccessException("Konto na podany adres email nie istnieje.");
             }
 
             bool isPasswordValid = _passwordHasher.Verify(loginRequest.Password, user.Password);
             if (!isPasswordValid)
             {
-                throw new UnauthorizedAccessException("Nieprawidłowy email lub hasło");
+                throw new UnauthorizedAccessException("Podane hasło jest nieprawidłowe.");
             }
 
             var token = _jwtGenerator.GenerateToken(user);
@@ -73,7 +73,7 @@ namespace ParkRent.Functionality.Services
             }
 
             var username = string.IsNullOrWhiteSpace(registerRequest.Username)
-                ? registerRequest.Email.Split('@')[0] : registerRequest.Username;
+                ? registerRequest.Name : registerRequest.Username;
 
             var existingUsername = await _userRepository.GetByUsernameAsync(username);
             if (existingUsername != null)
@@ -98,7 +98,8 @@ namespace ParkRent.Functionality.Services
                 Email = registerRequest.Email,
                 Password = _passwordHasher.Hash(registerRequest.Password),
                 DistrictId = null,
-                Role = UserRole.User
+                Role = UserRole.User,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _userRepository.AddAsync(newUser);

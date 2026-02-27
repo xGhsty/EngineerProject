@@ -7,6 +7,7 @@
 
 .admin-main-content {
     flex: 1;
+    min-width: 0;
     padding: 40px;
     margin-left: 0;
     width: 100%;
@@ -60,7 +61,8 @@
     flex: 1;
     position: relative;
     z-index: 1;
-    padding-top: 20px;
+    padding-top: 10px;
+    padding-left: 30px;
 }
 
 .tab-button {
@@ -97,6 +99,40 @@
     animation: fadeIn 0.3s ease;
 }
 
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-card, #ffffff);
+    border: 2px solid var(--border-color, #e0e0e0);
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+}
+
+.search-bar:focus-within {
+    border-color: var(--accent, #4caf50);
+}
+
+.search-bar i {
+    color: var(--text-secondary, #999);
+    font-size: 16px;
+}
+
+.search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--text-color, #3d4d5c);
+    width: 100%;
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary, #999);
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -120,11 +156,18 @@
     border-radius: 16px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     transition: all 0.3s;
+    position: relative;
+    z-index: 0;
 }
 
 .user-card:hover {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
+    z-index: 5;
+}
+
+.user-card:focus-within {
+    z-index: 10;
 }
 
 .user-card-header {
@@ -139,7 +182,7 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -159,7 +202,7 @@
 
 .user-username {
     margin: 0 0 4px 0;
-    color: #667eea;
+    color: var(--accent);
     font-size: 14px;
     font-weight: 600;
 }
@@ -168,6 +211,20 @@
     margin: 0;
     color: #999;
     font-size: 13px;
+}
+
+.user-created-at {
+    margin: 4px 0 0 0;
+    color: #aaa;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.user-created-at i {
+    color: var(--accent);
+    font-size: 11px;
 }
 
 .user-controls {
@@ -180,6 +237,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-width: 0;
 }
 
 .control-group label {
@@ -189,34 +247,43 @@
 }
 
 .control-select {
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: 12px 40px 12px 16px;
+    border: 2px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
     font-size: 15px;
-    color: #3d4d5c;
-    background: white;
+    color: var(--text-color, #3d4d5c);
+    background-color: var(--bg-card, white);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px;
+    appearance: none;
+    -webkit-appearance: none;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .control-select:hover {
-    border-color: #4caf50;
+    border-color: var(--accent, #4caf50);
 }
 
 .control-select:focus {
     outline: none;
-    border-color: #4caf50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    border-color: var(--accent, #4caf50);
+    box-shadow: 0 0 0 3px var(--accent-light, rgba(76, 175, 80, 0.1));
 }
 
 .control-select:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background-color: #f5f5f5;
+    background-color: var(--bg-secondary, #f5f5f5);
 }
 
 .user-district-badge {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     color: white;
     padding: 10px 16px;
     border-radius: 8px;
@@ -253,27 +320,37 @@
 }
 
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    display: flex;
+    flex-wrap: wrap;
     gap: 15px;
     align-items: end;
 }
 
+.form-row .form-input,
+.form-row .form-select {
+    flex: 1;
+    min-width: 160px;
+}
+
 .form-input,
 .form-select {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
     padding: 14px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border: 2px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
     font-size: 15px;
-    color: #3d4d5c;
+    color: var(--text-color, #3d4d5c);
+    background: var(--bg-card, white);
     transition: all 0.3s;
 }
 
 .form-input:focus,
 .form-select:focus {
     outline: none;
-    border-color: #4caf50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    border-color: var(--accent, #4caf50);
+    box-shadow: 0 0 0 3px var(--accent-light, rgba(76, 175, 80, 0.1));
 }
 
 .create-button {
@@ -309,11 +386,18 @@
     border-radius: 16px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     transition: all 0.3s;
+    position: relative;
+    z-index: 0;
 }
 
 .parking-spot-card:hover {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
+    z-index: 5;
+}
+
+.parking-spot-card:focus-within {
+    z-index: 10;
 }
 
 .spot-card-header {
@@ -371,7 +455,7 @@
 }
 
 .district-tag {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     color: white;
 }
 
@@ -419,6 +503,66 @@
     color: #721c24;
 }
 
+.spot-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.hours-popup-wrapper {
+    position: relative;
+}
+
+.hours-info-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: #666;
+    font-size: 17px;
+    line-height: 1;
+    transition: background 0.2s, color 0.2s;
+}
+
+.hours-info-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #333;
+}
+
+.dark-mode .hours-info-btn {
+    color: #aaa;
+}
+
+.dark-mode .hours-info-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #eee;
+}
+
+.hours-popup {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 20;
+    color: #3d4d5c;
+}
+
+.dark-mode .hours-popup {
+    background: rgba(30, 32, 44, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
 .spot-assign {
     display: flex;
     flex-direction: column;
@@ -432,24 +576,33 @@
 }
 
 .assign-select {
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: 12px 40px 12px 16px;
+    border: 2px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
     font-size: 15px;
-    color: #3d4d5c;
-    background: white;
+    color: var(--text-color, #3d4d5c);
+    background-color: var(--bg-card, white);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px;
+    appearance: none;
+    -webkit-appearance: none;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .assign-select:hover {
-    border-color: #4caf50;
+    border-color: var(--accent, #4caf50);
 }
 
 .assign-select:focus {
     outline: none;
-    border-color: #4caf50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    border-color: var(--accent, #4caf50);
+    box-shadow: 0 0 0 3px var(--accent-light, rgba(76, 175, 80, 0.1));
 }
 
 .loading {
@@ -466,10 +619,6 @@
     .users-grid,
     .parking-spots-grid {
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
     }
 
     .create-button {
@@ -524,7 +673,7 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -537,6 +686,11 @@
     color: #3d4d5c;
     font-size: 20px;
     font-weight: 700;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: break-word;
 }
 
 .hamburger {
@@ -714,4 +868,237 @@
 
 .menu-item.logout:hover {
     background-color: #c0392b;
+}
+
+/* Delete button */
+.delete-btn {
+    margin-top: 10px;
+    padding: 6px 14px;
+    background-color: transparent;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+.delete-btn-user {
+    width: 100%;
+    justify-content: center;
+    margin-top: 14px;
+}
+
+/* Confirm modal */
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.15s ease;
+}
+
+.confirm-modal {
+    background: var(--bg-card, #fff);
+    color: var(--text-primary, #1a1a1a);
+    border-radius: 14px;
+    padding: 36px 32px 28px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    animation: slideUp 0.2s ease;
+}
+
+.confirm-icon {
+    font-size: 42px;
+    color: #e74c3c;
+    margin-bottom: 14px;
+}
+
+.confirm-modal h3 {
+    margin: 0 0 12px;
+    font-size: 20px;
+}
+
+.confirm-modal p {
+    font-size: 15px;
+    margin: 0 0 6px;
+    line-height: 1.5;
+    opacity: 0.85;
+}
+
+.confirm-warning {
+    display: block;
+    margin-top: 8px;
+    color: #e07b00;
+    font-size: 13px;
+}
+
+.confirm-error {
+    color: #e74c3c;
+    font-size: 13px;
+    margin: 8px 0 0;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.confirm-btn-cancel {
+    padding: 9px 22px;
+    border: 1px solid var(--text-secondary, #888);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-primary, #1a1a1a);
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.confirm-btn-cancel:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+.confirm-btn-confirm {
+    padding: 9px 22px;
+    border: none;
+    border-radius: 8px;
+    background-color: #e74c3c;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+}
+
+.confirm-btn-confirm:hover {
+    background-color: #c0392b;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ───── Reservation logs table ───── */
+.logs-table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border-color, #ddd);
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.logs-table thead tr {
+    background-color: var(--accent, #2ecc71);
+    color: #fff;
+}
+
+.logs-table th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.logs-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color, #eee);
+    white-space: nowrap;
+}
+
+.logs-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.logs-table tbody tr:hover {
+    background-color: var(--bg-card, #f5f5f5);
+}
+
+.logs-empty {
+    text-align: center;
+    color: #888;
+    padding: 32px !important;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-active {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #27ae60;
+}
+
+.status-completed {
+    background-color: rgba(149, 165, 166, 0.2);
+    color: #7f8c8d;
+}
+
+.status-upcoming {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #2980b9;
+}
+
+.status-cancelled {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #c0392b;
+}
+
+/* dark mode adjustments */
+:root.dark-mode .logs-table tbody tr:hover {
+    background-color: rgba(255,255,255,0.05);
+}
+
+:root.dark-mode .logs-table td {
+    border-bottom-color: rgba(255,255,255,0.08);
+}
+
+:root.dark-mode .logs-table-wrapper {
+    border-color: rgba(255,255,255,0.1);
+}
+
+/* District label for DistrictAdmin parking form */
+.district-label-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 16px;
+    background-color: var(--bg-card, #f0f0f0);
+    border: 2px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent, #2ecc71);
+    white-space: nowrap;
 }

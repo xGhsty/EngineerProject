@@ -9,6 +9,7 @@ export interface AdminUser{
     districtId: string | null;
     districtName: string | null;
     role: string;
+    createdAt: string;
 }
 
 export interface District {
@@ -24,6 +25,8 @@ export interface AdminParkingSpot {
     ownerId: string | null;
     ownerName: string | null;
     isAvailable: boolean;
+    availableFrom: string | null;
+    availableTo: string | null;
 }
 
 // Helper function to get the correct API prefix based on user role
@@ -94,5 +97,31 @@ export const assignParkingSpotToUser = async (parkingSpotId: string, userId: str
 export const deleteParkingSpot = async (parkingSpotId: string) => {
     const prefix = getAdminPrefix();
     const response = await apiClient.delete(`${prefix}/parking-spots/${parkingSpotId}`);
+    return response.data;
+}
+
+export const deleteDistrict = async (districtId: string) => {
+    const response = await apiClient.delete(`/SuperAdmin/districts/${districtId}`);
+    return response.data;
+}
+
+export const deleteUser = async (userId: string) => {
+    const response = await apiClient.delete(`/SuperAdmin/users/${userId}`);
+    return response.data;
+}
+
+export interface ReservationLogEntry {
+    id: string;
+    userName: string;
+    parkingSpotName: string;
+    districtName: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+}
+
+export const getReservationHistory = async (): Promise<ReservationLogEntry[]> => {
+    const prefix = getAdminPrefix();
+    const response = await apiClient.get<ReservationLogEntry[]>(`${prefix}/reservation-history`);
     return response.data;
 }

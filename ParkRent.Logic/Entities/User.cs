@@ -10,15 +10,16 @@ namespace ParkRent.Logic.Entities
     public class User : BaseEntity
     {
         [Required]
-        [MaxLength(50)]
+        [MaxLength(20)]
         public string Name { get; set; }
         [Required]
-        [MaxLength(100)]
+        [MaxLength(50)]
         public string Surname { get; set; }
         [Required]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string Username { get; set; }
         [Required]
+        [MaxLength(50)]
         [EmailAddress]
         public string Email { get; set; }
         [Required]
@@ -26,6 +27,10 @@ namespace ParkRent.Logic.Entities
         public Guid? DistrictId { get; set; }
         public District? District { get; set; }
         public UserRole Role { get; set; } = UserRole.User;
+
+        public bool DarkMode { get; set; } = false;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<Reservation>? Reservations { get; set; }
     }

@@ -1,10 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUserInfo, getParkingSpots, getParkingSpotsByDistrict, getDistricts, type UserInfo, type ParkingSpot, type District } from '../../api/dashboard';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import DarkModeToggle from '../DarkModeToggle/DarkModeToggle';
 import ReservationModal from '../ReservationModel/ReservationModel';
 import './Dashboard.css';
+
+interface Notification {
+    id: number;
+    spotName: string;
+    type: 'freed' | 'occupied';
+    time: Date;
+}
 
 export default function Dashboard() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -15,30 +22,62 @@ export default function Dashboard() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [noDistrictMessage, setNoDistrictMessage] = useState<string | null>(null);
     const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notifOpen, setNotifOpen] = useState(false);
+    const prevSpotsRef = useRef<Record<string, boolean>>({});
+    const notifIdRef = useRef(0);
+    const selectedDistrictRef = useRef('');
+    const noDistrictRef = useRef(false);
     const navigate = useNavigate();
     const { isDark, toggle } = useDarkMode();
 
-    useEffect(() => {
-        loadDashboardData();
-    }, []);
+    const applySpots = (spots: ParkingSpot[]) => {
+        const prev = prevSpotsRef.current;
+        const newNotifs: Notification[] = [];
+
+        spots.forEach(spot => {
+            if (spot.id in prev && prev[spot.id] !== spot.isAvailable) {
+                newNotifs.push({
+                    id: ++notifIdRef.current,
+                    spotName: spot.name,
+                    type: spot.isAvailable ? 'freed' : 'occupied',
+                    time: new Date(),
+                });
+            }
+            prev[spot.id] = spot.isAvailable;
+        });
+
+        if (newNotifs.length > 0) {
+            setNotifications(n => [...newNotifs, ...n].slice(0, 20));
+        }
+
+        setParkingSpots(spots);
+    };
 
     const loadDashboardData = async () => {
         try {
-            const [user, spotsResponse] = await Promise.all([
+            const [user, spotsResponse, districtsData] = await Promise.all([
                 getUserInfo(),
-                getParkingSpots()
+                getParkingSpots(),
+                getDistricts()
             ]);
 
             setUserInfo(user);
+            setDistricts(districtsData);
 
             if (spotsResponse && 'message' in spotsResponse) {
                 setParkingSpots([]);
                 setNoDistrictMessage(spotsResponse.message);
-                const districtsData = await getDistricts();
-                setDistricts(districtsData);
+                noDistrictRef.current = true;
             } else {
-                setParkingSpots(spotsResponse);
+                applySpots(spotsResponse as ParkingSpot[]);
                 setNoDistrictMessage(null);
+                noDistrictRef.current = false;
+                // Pre-select user's own district
+                if (user.districtId) {
+                    setSelectedDistrict(user.districtId);
+                    selectedDistrictRef.current = user.districtId;
+                }
             }
 
             setLoading(false);
@@ -50,18 +89,51 @@ export default function Dashboard() {
         }
     };
 
+    const refreshSpots = async () => {
+        try {
+            const districtId = selectedDistrictRef.current;
+            if (districtId) {
+                const spots = await getParkingSpotsByDistrict(districtId);
+                applySpots(spots);
+            } else if (!noDistrictRef.current) {
+                const spotsResponse = await getParkingSpots();
+                if (!('message' in spotsResponse)) {
+                    applySpots(spotsResponse as ParkingSpot[]);
+                }
+            }
+        } catch (error) {
+            console.error('Błąd podczas odświeżania miejsc parkingowych:', error);
+        }
+    };
+
+    useEffect(() => {
+        loadDashboardData();
+
+        const interval = setInterval(() => {
+            refreshSpots();
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     const handleDistrictChange = async (districtId: string) => {
         setSelectedDistrict(districtId);
+        selectedDistrictRef.current = districtId;
         if (districtId) {
             try {
                 const spots = await getParkingSpotsByDistrict(districtId);
-                setParkingSpots(spots);
+                applySpots(spots);
             } catch (error) {
                 console.error('Error loading parking spots for district:', error);
                 setParkingSpots([]);
             }
-        } else {
+        } else if (noDistrictRef.current) {
             setParkingSpots([]);
+        } else {
+            const spotsResponse = await getParkingSpots();
+            if (!('message' in spotsResponse)) {
+                applySpots(spotsResponse as ParkingSpot[]);
+            }
         }
     };
 
@@ -72,13 +144,29 @@ export default function Dashboard() {
     };
 
     const handleSpotClick = (spot: ParkingSpot) => {
-        if (spot.isAvailable) {
+        if (spot.isAvailable && !spot.isOutsideHours) {
             setSelectedSpot(spot);
         }
     };
 
+    const formatReservedUntil = (isoDate: string) => {
+        const d = new Date(isoDate);
+        const today = new Date();
+        const isToday = d.toDateString() === today.toDateString();
+        if (isToday) {
+            return d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+        }
+        return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })
+            + ' ' + d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    };
+
     const handleReservationSuccess = () => {
-        loadDashboardData();
+        if (selectedSpot) {
+            setParkingSpots(prev => prev.map(s =>
+                s.id === selectedSpot.id ? { ...s, isAvailable: false } : s
+            ));
+        }
+        refreshSpots();
     };
 
     const userRole = localStorage.getItem('role');
@@ -111,20 +199,13 @@ export default function Dashboard() {
                         {userInfo?.name?.[0]}{userInfo?.surname?.[0]}
                     </div>
                     <div className="user-details">
-                        <p className="greeting">Cześć {userInfo?.name}!</p>
+                        <p className="greeting">Cześć {userInfo?.username?.trim() || userInfo?.name}!</p>
                     </div>
                 </div>
 
                 <DarkModeToggle isDark={isDark} onToggle={toggle} />
 
                 <nav className="menu">
-                    <button
-                        className={`menu-item ${window.location.pathname === '/dashboard' ? 'active' : ''}`}
-                        onClick={() => navigate('/dashboard')}
-                    >
-                        <i className='bi bi-p-square'></i> Dostępne miejsca
-                    </button>
-
                     {(userRole === "DistrictAdmin" || userRole === "SuperAdmin") && (
                         <button
                             className={`menu-item ${window.location.pathname === '/admin' ? 'active' : ''}`}
@@ -133,6 +214,13 @@ export default function Dashboard() {
                             <i className='bi bi-people'></i> Panel Admina
                         </button>
                     )}
+
+                    <button
+                        className={`menu-item ${window.location.pathname === '/dashboard' ? 'active' : ''}`}
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        <i className='bi bi-map'></i> Mapa parkingów
+                    </button>
 
                     <button
                         className={`menu-item ${window.location.pathname === '/my-parking-spots' ? 'active' : ''}`}
@@ -162,36 +250,88 @@ export default function Dashboard() {
             </aside>
 
             <main className="main-content">
-                {noDistrictMessage && (
-                    <div className="district-selector-container">
+                <div className="notifications-bar">
+                    <button
+                        className="notif-bell-btn"
+                        onClick={() => setNotifOpen(o => !o)}
+                    >
+                        <i className="bi bi-bell"></i>
+                        <span className="notif-title">Powiadomienia</span>
+                        {notifications.length > 0 && (
+                            <span className="notif-badge">{notifications.length}</span>
+                        )}
+                    </button>
+
+                    {notifOpen && (
+                        <div className="notif-dropdown">
+                            {notifications.length === 0 ? (
+                                <div className="notif-empty">Brak powiadomień</div>
+                            ) : (
+                                <>
+                                    <div className="notif-list">
+                                        {notifications.map(n => (
+                                            <div key={n.id} className={`notif-item ${n.type}`}>
+                                                <span className="notif-icon">
+                                                    {n.type === 'freed' ? '✓' : '✗'}
+                                                </span>
+                                                <div className="notif-content">
+                                                    <span className="notif-spot">{n.spotName}</span>
+                                                    <span className="notif-msg">
+                                                        {n.type === 'freed' ? 'Zwolnione' : 'Zajęte'}
+                                                    </span>
+                                                </div>
+                                                <span className="notif-time">
+                                                    {n.time.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button
+                                        className="notif-clear"
+                                        onClick={() => setNotifications([])}
+                                    >
+                                        Wyczyść wszystkie
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="district-selector-container">
+                    {noDistrictMessage && (
                         <div className="info-banner">
                             <p>ℹ️ {noDistrictMessage}</p>
                         </div>
-                        <div className="district-selector">
-                            <label htmlFor="district-select">Wybierz dzielnicę, aby zobaczyć dostępne miejsca:</label>
-                            <select
-                                id="district-select"
-                                value={selectedDistrict}
-                                onChange={(e) => handleDistrictChange(e.target.value)}
-                                className="district-select"
-                            >
-                                <option value="">-- Wybierz dzielnicę --</option>
-                                {districts.map(district => (
-                                    <option key={district.id} value={district.id}>
-                                        {district.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    )}
+                    <div className="district-selector">
+                        <label htmlFor="district-select">
+                            {noDistrictMessage
+                                ? 'Wybierz dzielnicę, aby zobaczyć dostępne miejsca:'
+                                : 'Przeglądasz dzielnicę:'}
+                        </label>
+                        <select
+                            id="district-select"
+                            value={selectedDistrict}
+                            onChange={(e) => handleDistrictChange(e.target.value)}
+                            className="district-select"
+                        >
+                            {noDistrictMessage
+                                ? <option value="">-- Wybierz dzielnicę --</option>
+                                : <option value="">-- Twoja dzielnica --</option>
+                            }
+                            {districts.map(district => (
+                                <option key={district.id} value={district.id}>
+                                    {district.name}
+                                    {district.id === userInfo?.districtId ? ' (Twoja)' : ''}
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                )}
+                </div>
 
                 <div className="parking-grid">
-                    {parkingSpots.length === 0 && !noDistrictMessage ? (
-                        <div className="empty-state">
-                            <p>Brak dostępnych miejsc parkingowych</p>
-                        </div>
-                    ) : noDistrictMessage && !selectedDistrict ? null : parkingSpots.length === 0 ? (
+                    {noDistrictMessage && !selectedDistrict ? null : parkingSpots.length === 0 ? (
                         <div className="empty-state">
                             <p>Brak dostępnych miejsc parkingowych w wybranej dzielnicy</p>
                         </div>
@@ -199,12 +339,12 @@ export default function Dashboard() {
                         parkingSpots.map(spot => (
                             <div
                                 key={spot.id}
-                                className={`parking-spot ${spot.isAvailable ? 'available' : 'occupied'} ${spot.isAvailable ? 'clickable' : ''}`}
+                                className={`parking-spot ${spot.isAvailable ? 'available' : spot.reservedUntil ? 'occupied' : 'outside-hours'} ${spot.isAvailable ? 'clickable' : ''}`}
                                 onClick={() => handleSpotClick(spot)}
                             >
                                 <div className="spot-icon">P</div>
                                 <div className="spot-name">{spot.name}</div>
-                                {spot.availableFrom && spot.availableTo && spot.isAvailable && (
+                                {spot.availableFrom && spot.availableTo && (
                                     <div className="spot-hours">
                                         <i className="bi bi-clock"></i>
                                         <div className="hours-info">
@@ -213,8 +353,20 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                 )}
+                                {spot.isAvailable && spot.nextReservationAt && (
+                                    <div className="spot-next-reservation">
+                                        <i className="bi bi-clock-history"></i>
+                                        Od {formatReservedUntil(spot.nextReservationAt)} zajęte
+                                    </div>
+                                )}
                                 <div className="spot-status">
-                                    {spot.isAvailable ? '✓ Wolne' : '✗ Zajęte'}
+                                    {spot.isAvailable
+                                        ? '✓ Wolne'
+                                        : spot.isOutsideHours
+                                            ? '⊘ Niedostępny'
+                                            : spot.reservedUntil
+                                                ? `✗ Zajęte do ${formatReservedUntil(spot.reservedUntil)}`
+                                                : '⊘ Niedostępny'}
                                 </div>
                             </div>
                         ))
@@ -225,6 +377,7 @@ export default function Dashboard() {
             {selectedSpot && (
                 <ReservationModal
                     parkingSpot={selectedSpot}
+                    nextReservationAt={selectedSpot.nextReservationAt ?? null}
                     onClose={() => setSelectedSpot(null)}
                     onSuccess={handleReservationSuccess}
                 />

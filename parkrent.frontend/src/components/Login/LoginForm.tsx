@@ -10,7 +10,6 @@ export default function LoginForm() {
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    // Wymuszaj light mode na stronie logowania
     useEffect(() => {
         document.documentElement.classList.remove('dark-mode');
     }, []);
@@ -24,7 +23,8 @@ export default function LoginForm() {
 
             if (typeof data === "object" && data !== null && "token" in data && typeof (data as any).token === "string") {
                 localStorage.setItem("token", (data as any).token);
-                localStorage.setItem("role", (data as any).role);
+                const rawRole = (data as any).role;
+                localStorage.setItem("role", rawRole === 'Admin' ? 'DistrictAdmin' : rawRole);
                 navigate("/dashboard");
             } else {
                 throw new Error("Nieprawidłowa odpowiedź serwera");

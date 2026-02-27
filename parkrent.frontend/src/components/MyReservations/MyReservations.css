@@ -7,9 +7,11 @@
 
 .my-reservations-main-content {
     flex: 1;
+    min-width: 0;
     padding: 70px;
     margin-left: 0;
     width: 100%;
+    overflow-x: hidden;
 }
 
 .my-reservations-main-content h1 {
@@ -195,6 +197,67 @@
     background-color: #c0392b;
 }
 
+.reservations-filter-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.history-retention-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    background: var(--bg-card);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: var(--text-primary);
+    opacity: 0.75;
+}
+
+.filter-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.filter-tab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.filter-tab.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    font-weight: 600;
+}
+
+.filter-count {
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.filter-tab:not(.active) .filter-count {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
 .reservations-container {
     width: 100%;
 }
@@ -273,6 +336,16 @@
     color: #6c757d;
 }
 
+.status-badge.cancelled {
+    background: #fdecea;
+    color: #c0392b;
+}
+
+.reservation-card.cancelled {
+    border-left-color: #e74c3c;
+    opacity: 0.75;
+}
+
 .reservation-details {
     display: flex;
     flex-direction: column;
@@ -287,7 +360,7 @@
 
 .detail-row i {
     font-size: 20px;
-    color: #667eea;
+    color: var(--accent);
     margin-top: 2px;
 }
 
@@ -309,6 +382,119 @@
     font-weight: 500;
 }
 
+.cancel-reservation-btn {
+    margin-top: 16px;
+    width: 100%;
+    padding: 10px 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: #ef4444;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.cancel-reservation-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+}
+
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.2s ease;
+}
+
+.confirm-modal {
+    background: var(--bg-card, #ffffff);
+    border-radius: 16px;
+    padding: 36px 32px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.25s ease;
+}
+
+.confirm-icon {
+    font-size: 48px;
+    color: #ef4444;
+    margin-bottom: 16px;
+}
+
+.confirm-modal h3 {
+    margin: 0 0 12px 0;
+    font-size: 22px;
+    color: var(--text-color, #3d4d5c);
+}
+
+.confirm-modal p {
+    margin: 0 0 20px 0;
+    font-size: 15px;
+    color: var(--text-secondary, #999);
+    line-height: 1.5;
+}
+
+.confirm-error {
+    color: #ef4444 !important;
+    font-size: 14px !important;
+    margin-bottom: 16px !important;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirm-btn-cancel {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color, #e0e0e0);
+    background: transparent;
+    color: var(--text-color, #3d4d5c);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.confirm-btn-cancel:hover {
+    background: var(--bg-secondary, #f0f2f5);
+}
+
+.confirm-btn-confirm {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.confirm-btn-confirm:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
 .empty-state {
     text-align: center;
     padding: 80px 20px;
@@ -325,7 +511,7 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -375,6 +561,57 @@
     font-size: 24px;
     color: var(--text-primary);
     background-color: var(--bg-primary);
+}
+
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.page-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.page-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.page-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.page-ellipsis {
+    color: var(--text-primary);
+    opacity: 0.5;
+    font-size: 16px;
+    padding: 0 4px;
+    line-height: 38px;
 }
 
 @media (max-width: 768px) {

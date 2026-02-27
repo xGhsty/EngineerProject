@@ -47,6 +47,19 @@ namespace ParkRent.Storage.Repository
             return await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.ParkingSpot)
+                    .ThenInclude(ps => ps.District)
+                .OrderByDescending(r => r.ReservationStartTime)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Reservation>> GetByDistrictAsync(Guid districtId)
+        {
+            return await _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.ParkingSpot)
+                    .ThenInclude(ps => ps.District)
+                .Where(r => r.ParkingSpot.DistrictId == districtId)
+                .OrderByDescending(r => r.ReservationStartTime)
                 .ToListAsync();
         }
 
@@ -78,7 +91,7 @@ namespace ParkRent.Storage.Repository
 
         public async Task UpdateAsync(Reservation reservation)
         {
-            _context.Reservations.Update(reservation);
+            _context.Entry(reservation).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
     }

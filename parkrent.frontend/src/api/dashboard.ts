@@ -7,6 +7,8 @@ export interface UserInfo {
     surname: string;
     email: string;
     fullName: string;
+    districtId?: string | null;
+    districtName?: string | null;
 }
 
 export interface NoParkingSpots{
@@ -18,6 +20,9 @@ export interface ParkingSpot {
     id: string;
     name: string;
     isAvailable: boolean;
+    isOutsideHours?: boolean;
+    reservedUntil?: string | null;
+    nextReservationAt?: string | null;
     availableFrom?: string | null;
     availableTo?: string | null;
 }
@@ -40,6 +45,10 @@ export const getParkingSpots = async (): Promise<ParkingSpot[] | NoParkingSpots>
 export const getMyReservations = async () => {
     const response = await apiClient.get(`/dashboard/my-reservations`);
     return response.data;
+}
+
+export const cancelReservation = async (reservationId: string): Promise<void> => {
+    await apiClient.delete(`/reservation/${reservationId}`);
 }
 
 export const getReservationHistory = async () => {

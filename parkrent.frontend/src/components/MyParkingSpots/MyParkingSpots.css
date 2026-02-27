@@ -231,7 +231,7 @@
 }
 
 .district-badge{
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     color: white;
     padding: 6px 14px;
     border-radius: 20px;
@@ -307,6 +307,43 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
+}
+
+.hours-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.reset-hours-button {
+    padding: 8px 14px;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.7;
+}
+
+.reset-hours-button:hover {
+    border-color: #e74c3c;
+    color: #e74c3c;
+    opacity: 1;
+}
+
+.toggle-error {
+    margin: 6px 0 0 0;
+    font-size: 13px;
+    color: #e74c3c;
+    font-weight: 500;
 }
 
 .hours-text {
@@ -318,7 +355,7 @@
 
 .edit-hours-button {
     padding: 8px 16px;
-    background: #667eea;
+    background: var(--accent);
     color: white;
     border: none;
     border-radius: 6px;
@@ -443,6 +480,17 @@
     opacity: 0.9;
 }
 
+.dark-mode .current-reservation {
+    background: linear-gradient(135deg, rgba(133, 100, 4, 0.25) 0%, rgba(133, 100, 4, 0.15) 100%);
+    border-left-color: #d4a017;
+}
+
+.dark-mode .current-reservation strong,
+.dark-mode .reservation-user,
+.dark-mode .reseravation-time {
+    color: #f0c040;
+}
+
 .incoming-reservations {
     background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
     padding: 16px;
@@ -494,6 +542,29 @@
     color: #0c5460;
     font-size: 13px;
     font-weight: 600;
+}
+
+.dark-mode .incoming-reservations {
+    background: linear-gradient(135deg, rgba(12, 84, 96, 0.3) 0%, rgba(12, 84, 96, 0.2) 100%);
+    border-left-color: #3dbdd4;
+}
+
+.dark-mode .incoming-reservations strong,
+.dark-mode .res-user,
+.dark-mode .res-time,
+.dark-mode .more-reservations {
+    color: #7dd8e8;
+}
+
+.dark-mode .incoming-reservations li {
+    border-bottom-color: rgba(125, 216, 232, 0.15);
+}
+
+.hours-error {
+    margin: 6px 0 4px;
+    font-size: 13px;
+    color: #e74c3c;
+    font-weight: 500;
 }
 
 .empty-state {

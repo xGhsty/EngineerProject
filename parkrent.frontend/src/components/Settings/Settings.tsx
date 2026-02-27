@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserInfo, type UserInfo } from "../../api/dashboard";
+import { updateUsername, changePassword } from "../../api/userSettings";
 import { useDarkMode } from "../../hooks/useDarkMode";
 import DarkModeToggle from "../DarkModeToggle/DarkModeToggle";
 import "./Settings.css";
@@ -14,12 +15,12 @@ export default function Settings() {
     const navigate = useNavigate();
     const { isDark, toggle } = useDarkMode();
 
-    const [name, setName] = useState("");
-    const [surname, setSurname] = useState("");
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
+    const [usernameMessage, setUsernameMessage] = useState<{ text: string; ok: boolean } | null>(null);
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [passwordMessage, setPasswordMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
     useEffect(() => {
         loadUserData();
@@ -29,9 +30,7 @@ export default function Settings() {
         try {
             const user = await getUserInfo();
             setUserInfo(user);
-            setName(user.name);
-            setSurname(user.surname);
-            setEmail(user.email);
+            setUsername(user.username);
             setLoading(false);
         } catch (error) {
             console.error('Error loading user data:', error);
@@ -39,20 +38,52 @@ export default function Settings() {
         }
     };
 
-    const handleProfileUpdate = async (e: React.FormEvent) => {
+    const handleUsernameUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement profile update API call
-        alert("Funkcjonalność w trakcie implementacji");
+        setUsernameMessage(null);
+        try {
+            await updateUsername(username);
+            setUsernameMessage({ text: "Nazwa użytkownika zaktualizowana!", ok: true });
+        } catch (error: unknown) {
+            const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Błąd podczas aktualizacji";
+            setUsernameMessage({ text: msg, ok: false });
+        }
     };
+
+    const reqItem = (ok: boolean, label: string, neutral = false) => (
+        <div className={`req-item ${neutral ? 'neutral' : ok ? 'ok' : 'fail'}`}>
+            <i className={`bi bi-${neutral ? 'circle' : ok ? 'check-circle-fill' : 'x-circle-fill'}`}></i>
+            {label}
+        </div>
+    );
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newPassword !== confirmPassword) {
-            alert("Nowe hasła nie są zgodne!");
+        setPasswordMessage(null);
+
+        if (newPassword.length < 6) {
+            setPasswordMessage({ text: "Nowe hasło musi mieć minimum 6 znaków.", ok: false });
             return;
         }
-        // TODO: Implement password change API call
-        alert("Funkcjonalność w trakcie implementacji");
+        if (newPassword === currentPassword) {
+            setPasswordMessage({ text: "Nowe hasło musi różnić się od aktualnego.", ok: false });
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setPasswordMessage({ text: "Nowe hasło i potwierdzenie muszą być takie same.", ok: false });
+            return;
+        }
+
+        try {
+            await changePassword(currentPassword, newPassword, confirmPassword);
+            setPasswordMessage({ text: "Hasło zostało zmienione!", ok: true });
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+        } catch (error: unknown) {
+            const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Wystąpił błąd podczas zmiany hasła.";
+            setPasswordMessage({ text: msg, ok: false });
+        }
     };
 
     const handleLogout = () => {
@@ -91,20 +122,13 @@ export default function Settings() {
                         {userInfo?.name?.[0]}{userInfo?.surname?.[0]}
                     </div>
                     <div className="user-details">
-                        <p className="greeting">Cześć {userInfo?.name}!</p>
+                        <p className="greeting">Cześć {userInfo?.username?.trim() || userInfo?.name}!</p>
                     </div>
                 </div>
 
                 <DarkModeToggle isDark={isDark} onToggle={toggle} />
 
                 <nav className="menu">
-                    <button
-                        className={`menu-item ${window.location.pathname === '/dashboard' ? 'active' : ''}`}
-                        onClick={() => navigate('/dashboard')}
-                    >
-                        <i className='bi bi-p-square'></i> Dostępne miejsca
-                    </button>
-
                     {(userRole === "DistrictAdmin" || userRole === "SuperAdmin") && (
                         <button
                             className={`menu-item ${window.location.pathname === '/admin' ? 'active' : ''}`}
@@ -113,6 +137,13 @@ export default function Settings() {
                             <i className='bi bi-people'></i> Panel Admina
                         </button>
                     )}
+
+                    <button
+                        className={`menu-item ${window.location.pathname === '/dashboard' ? 'active' : ''}`}
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        <i className='bi bi-map'></i> Mapa parkingów
+                    </button>
 
                     <button
                         className={`menu-item ${window.location.pathname === '/my-parking-spots' ? 'active' : ''}`}
@@ -168,38 +199,25 @@ export default function Settings() {
                 <div className="settings-content">
                     {activeTab === "profile" && (
                         <div className="settings-panel">
-                            <h2>Dane profilu</h2>
-                            <form onSubmit={handleProfileUpdate} className="settings-form">
+                            <h2>Zmień nazwę użytkownika</h2>
+                            <form onSubmit={handleUsernameUpdate} className="settings-form">
                                 <div className="form-group">
-                                    <label>Imię</label>
+                                    <label>Nazwa użytkownika</label>
                                     <input
                                         type="text"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
                                         className="settings-input"
+                                        minLength={3}
+                                        maxLength={50}
                                         required
                                     />
                                 </div>
-                                <div className="form-group">
-                                    <label>Nazwisko</label>
-                                    <input
-                                        type="text"
-                                        value={surname}
-                                        onChange={(e) => setSurname(e.target.value)}
-                                        className="settings-input"
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Email</label>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="settings-input"
-                                        required
-                                    />
-                                </div>
+                                {usernameMessage && (
+                                    <p className={`settings-message ${usernameMessage.ok ? 'success' : 'error'}`}>
+                                        {usernameMessage.text}
+                                    </p>
+                                )}
                                 <button type="submit" className="save-button">
                                     <i className="bi bi-check-circle"></i> Zapisz zmiany
                                 </button>
@@ -241,6 +259,28 @@ export default function Settings() {
                                         required
                                     />
                                 </div>
+
+                                {newPassword.length > 0 && (
+                                    <div className="password-requirements">
+                                        {reqItem(newPassword.length >= 6, 'Minimum 6 znaków')}
+                                        {reqItem(
+                                            currentPassword.length > 0 && newPassword !== currentPassword,
+                                            'Różni się od aktualnego hasła',
+                                            currentPassword.length === 0
+                                        )}
+                                        {reqItem(
+                                            confirmPassword.length > 0 && newPassword === confirmPassword,
+                                            'Hasła są zgodne',
+                                            confirmPassword.length === 0
+                                        )}
+                                    </div>
+                                )}
+
+                                {passwordMessage && (
+                                    <p className={`settings-message ${passwordMessage.ok ? 'success' : 'error'}`}>
+                                        {passwordMessage.text}
+                                    </p>
+                                )}
                                 <button type="submit" className="save-button">
                                     <i className="bi bi-check-circle"></i> Zmień hasło
                                 </button>

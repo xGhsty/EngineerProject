@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Ghost/Desktop/Projekt/Projekt/ParkRent/ParkRent.API/Controllers/**)",
+      "Read(//c/Users/Ghost/Desktop/Projekt/Projekt/ParkRent/ParkRent.Logic/Entities/**)",
+      "Read(//c/Users/Ghost/Desktop/Projekt/Projekt/ParkRent/ParkRent.Logic/**)",
+      "Read(//c/Users/Ghost/Desktop/Projekt/Projekt/ParkRent/ParkRent.Functionality/Dto/**)",
+      "Read(//c/Users/Ghost/Desktop/Projekt/Projekt/ParkRent/**)",
+      "Bash(dotnet ef database update --project \"../ParkRent.Logic/ParkRent.Logic.csproj\")",
+      "Bash(dotnet tool list -g)",
+      "Bash(dotnet tool install --global dotnet-ef)",
+      "Bash(dotnet ef database update --project \"../ParkRent.Logic/ParkRent.Logic.csproj\" --startup-project \"ParkRent.API.csproj\")",
+      "Bash(dotnet ef database update --project \"../ParkRent.Logic/ParkRent.Storage.csproj\" --startup-project \"ParkRent.API.csproj\")",
+      "Bash(dotnet ef migrations list --project \"../ParkRent.Logic/ParkRent.Storage.csproj\" --startup-project \"ParkRent.API.csproj\")",
+      "Bash(sqlcmd -S \"\\(localdb\\)\\\\MSSQLLocalDB\" -d parkrent -Q \":*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.Logic\\Entities",
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.Logic\\Migrations",
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.API\\Controllers",
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.Functionality\\Dto",
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.Logic\\Repository",
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.Functionality\\Services",
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.API",
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.Logic\\Interfaces",
+      "c:\\Users\\Ghost\\Desktop\\Projekt\\Projekt\\ParkRent\\ParkRent.Logic"
+    ]
+  }
+}

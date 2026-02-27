@@ -38,11 +38,6 @@ namespace ParkRent.API.Controllers
                     return NotFound(new { message = "Miejsce parkingowe nie istnieje" });
                 }
 
-                if (!parkingSpot.IsAvailable)
-                {
-                    return BadRequest(new { message = "Miejsce parkingowe jest zajęte" });
-                }
-
                 if (request.StartTime >= request.EndTime)
                 {
                     return BadRequest(new { message = "Data końcowa nie może być wcześniej niż data początkowa" });
@@ -76,11 +71,28 @@ namespace ParkRent.API.Controllers
                     return BadRequest(new { message = "Data rezerwacji nie może być wsteczna" });
                 }
 
-                var existingReservation = await _reservationRepository.GetByParkingSpotIdAsync(request.ParkingSpotId);
-                var hasConflict = existingReservation.Any(r =>
-                    request.StartTime < r.ReservationStartTime &&
+                if (!parkingSpot.IsAvailable)
+                {
+                    return BadRequest(new { message = "Miejsce parkingowe jest zablokowane przez właściciela" });
+                }
+
+                // Sprawdzenie limitu rezerwacji (maksymalnie 1 aktywna lub przyszła na użytkownika)
+                var userReservations = await _reservationRepository.GetByUserIdAsync(Guid.Parse(userId));
+                var hasActiveReservation = userReservations.Any(r => !r.IsCancelled && r.ReservationEndTime > DateTime.UtcNow);
+                if (hasActiveReservation)
+                {
+                    return BadRequest(new { message = "Masz już aktywną rezerwację. Anuluj ją, aby zarezerwować inne miejsce." });
+                }
+
+                var existingReservations = await _reservationRepository.GetByParkingSpotIdAsync(request.ParkingSpotId);
+
+                // Sprawdzenie nakładania się przedziałów czasowych (pomijaj anulowane i przeszłe)
+                var hasConflict = existingReservations.Any(r =>
+                    !r.IsCancelled &&
+                    r.ReservationEndTime > DateTime.UtcNow &&
+                    request.StartTime < r.ReservationEndTime &&
                     request.EndTime > r.ReservationStartTime
-                    );
+                );
 
                 if (hasConflict)
                 {
@@ -97,9 +109,6 @@ namespace ParkRent.API.Controllers
                 };
 
                 await _reservationRepository.AddAsync(reservation);
-
-                parkingSpot.IsAvailable = false;
-                await _parkingSpotRepository.UpdateAsync(parkingSpot);
 
                 return Ok(new
                 {
@@ -138,19 +147,20 @@ namespace ParkRent.API.Controllers
                     return Forbid();
                 }
 
-                if (reservation.ReservationStartTime <= DateTime.UtcNow)
+                if (reservation.IsCancelled)
                 {
-                    return BadRequest(new { message = "Nie można anulować rezerwacji która już się rozpoczeła" });
+                    return BadRequest(new { message = "Rezerwacja jest już anulowana" });
                 }
 
-                var parkingSpot = await _parkingSpotRepository.GetByIdAsync(reservation.ParkingSpotId);
-                if (parkingSpot != null)
+                if (reservation.ReservationEndTime <= DateTime.UtcNow)
                 {
-                    parkingSpot.IsAvailable = true;
-                    await _parkingSpotRepository.UpdateAsync(parkingSpot);
+                    return BadRequest(new { message = "Nie można anulować zakończonej rezerwacji" });
                 }
 
-                await _reservationRepository.DeleteAsync(reservation);
+                // Soft cancel — zachowaj rezerwację w systemie
+                reservation.IsCancelled = true;
+                reservation.CancelledAt = DateTime.UtcNow;
+                await _reservationRepository.UpdateAsync(reservation);
 
                 return Ok(new { message = "Rezerwacja anulowana" });
             }

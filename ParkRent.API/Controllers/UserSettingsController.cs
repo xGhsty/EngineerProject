@@ -134,6 +134,11 @@ namespace ParkRent.API.Controllers
                     return BadRequest(new { message = "Nowe hasło musi mieć minimum 6 znaków" });
                 }
 
+                if (_passwordHasher.Verify(request.NewPassword, user.Password))
+                {
+                    return BadRequest(new { message = "Nowe hasło musi różnić się od aktualnego" });
+                }
+
                 user.Password = _passwordHasher.Hash(request.NewPassword);
                 await _userRepository.UpdateAsync(user);
 
@@ -144,6 +149,51 @@ namespace ParkRent.API.Controllers
                 return BadRequest(new { message = $"Wystąpił błąd poczas zmiany hasła: {ex.Message}" });
             }
         }
+        [HttpGet("dark-mode")]
+        public async Task<IActionResult> GetDarkMode()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { message = "Brak autoryzacji" });
+
+                var user = await _userRepository.GetByIdAsync(Guid.Parse(userId));
+                if (user == null)
+                    return NotFound(new { message = "Nie znaleziono użytkownika" });
+
+                return Ok(new { darkMode = user.DarkMode });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("dark-mode")]
+        public async Task<IActionResult> SetDarkMode([FromBody] SetDarkModeRequest request)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { message = "Brak autoryzacji" });
+
+                var user = await _userRepository.GetByIdAsync(Guid.Parse(userId));
+                if (user == null)
+                    return NotFound(new { message = "Nie znaleziono użytkownika" });
+
+                user.DarkMode = request.DarkMode;
+                await _userRepository.UpdateAsync(user);
+
+                return Ok(new { darkMode = user.DarkMode });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpDelete("delete-account")]
         public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
         {

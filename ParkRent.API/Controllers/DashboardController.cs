@@ -55,6 +55,8 @@ namespace ParkRent.API.Controllers
                     surname = user.Surname,
                     email = user.Email,
                     fullName = $"{user.Name} {user.Surname}",
+                    districtId = user.DistrictId?.ToString(),
+                    districtName = user.District?.Name,
                 });
             }
             catch (Exception ex)
@@ -90,16 +92,10 @@ namespace ParkRent.API.Controllers
                     });
                 }
 
-                var parkingSpots = await _parkingSpotRepository.GetByDistrictIdAsync(user.DistrictId.Value);
+                var parkingSpots = (await _parkingSpotRepository.GetByDistrictIdAsync(user.DistrictId.Value)).ToList();
 
-                return Ok(parkingSpots.Select(p => new
-                {
-                    id = p.Id,
-                    name = p.Name,
-                    isAvailable = p.IsAvailable,
-                    availableFrom = p.AvailableFrom?.ToString(@"hh\:mm"),
-                    availableTo = p.AvailableTo?.ToString(@"hh\:mm"),
-                }));
+                var now = DateTime.UtcNow;
+                return Ok(parkingSpots.Select(p => BuildParkingSpotDto(p, now)));
             }
             catch (Exception ex)
             {
@@ -140,16 +136,19 @@ namespace ParkRent.API.Controllers
                     return Unauthorized(new { message = "Brak autoryzacji" });
                 }
 
-                var reservations = await _reservationRepository.GetActiveByUserIdAsync(Guid.Parse(userId));
+                var reservations = await _reservationRepository.GetByUserIdAsync(Guid.Parse(userId));
 
-                var reservationsDto = reservations.Select(r => new
-                {
-                    id = r.Id,
-                    parkingSpotName = r.ParkingSpot?.Name,
-                    startTime = r.ReservationStartTime,
-                    endTime = r.ReservationEndTime,
-                    isActive = r.ReservationEndTime >= DateTime.UtcNow
-                });
+                var reservationsDto = reservations
+                    .OrderByDescending(r => r.ReservationStartTime)
+                    .Select(r => new
+                    {
+                        id = r.Id,
+                        parkingSpotName = r.ParkingSpot?.Name,
+                        startTime = DateTime.SpecifyKind(r.ReservationStartTime, DateTimeKind.Utc),
+                        endTime = DateTime.SpecifyKind(r.ReservationEndTime, DateTimeKind.Utc),
+                        isActive = !r.IsCancelled && r.ReservationEndTime >= DateTime.UtcNow,
+                        isCancelled = r.IsCancelled
+                    });
 
                 return Ok(reservationsDto);
             }
@@ -194,21 +193,50 @@ namespace ParkRent.API.Controllers
         {
             try
             {
-                var parkingSpots = await _parkingSpotRepository.GetByDistrictIdAsync(districtId);
+                var parkingSpots = (await _parkingSpotRepository.GetByDistrictIdAsync(districtId)).ToList();
 
-                return Ok(parkingSpots.Select(p => new
-                {
-                    id = p.Id,
-                    name = p.Name,
-                    isAvailable = p.IsAvailable,
-                    availableFrom = p.AvailableFrom?.ToString(@"hh\:mm"),
-                    availableTo = p.AvailableTo?.ToString(@"hh\:mm"),
-                }));
+                var now = DateTime.UtcNow;
+                return Ok(parkingSpots.Select(p => BuildParkingSpotDto(p, now)));
             }
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+
+        private static object BuildParkingSpotDto(ParkingSpot p, DateTime now)
+        {
+            var currentReservation = p.Reservations?
+                .Where(r => !r.IsCancelled && r.ReservationStartTime <= now && r.ReservationEndTime > now)
+                .FirstOrDefault();
+
+            var nextReservation = p.Reservations?
+                .Where(r => !r.IsCancelled && r.ReservationStartTime > now)
+                .OrderBy(r => r.ReservationStartTime)
+                .FirstOrDefault();
+
+            // Sprawdź czy aktualna godzina lokalna jest poza oknem dostępności
+            // AvailableFrom/AvailableTo są ustawiane przez użytkownika w czasie lokalnym,
+            // więc porównujemy z DateTime.Now (czas serwera/lokalny), nie UTC
+            var nowLocalTime = DateTime.Now.TimeOfDay;
+            var isOutsideHours = p.AvailableFrom.HasValue && p.AvailableTo.HasValue
+                && (nowLocalTime < p.AvailableFrom.Value || nowLocalTime >= p.AvailableTo.Value);
+
+            return new
+            {
+                id = p.Id,
+                name = p.Name,
+                isAvailable = p.IsAvailable && currentReservation == null && !isOutsideHours,
+                isOutsideHours,
+                reservedUntil = currentReservation != null
+                    ? (DateTime?)DateTime.SpecifyKind(currentReservation.ReservationEndTime, DateTimeKind.Utc)
+                    : null,
+                nextReservationAt = nextReservation != null
+                    ? (DateTime?)DateTime.SpecifyKind(nextReservation.ReservationStartTime, DateTimeKind.Utc)
+                    : null,
+                availableFrom = p.AvailableFrom?.ToString(@"hh\:mm"),
+                availableTo = p.AvailableTo?.ToString(@"hh\:mm"),
+            };
         }
 
         [HttpGet("districts")]

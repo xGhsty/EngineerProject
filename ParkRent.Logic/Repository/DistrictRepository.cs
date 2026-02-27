@@ -40,5 +40,11 @@ namespace ParkRent.Storage.Repository
             _context.Districts.Update(district);
             await _context.SaveChangesAsync();
         }
+
+        public async Task DeleteAsync(District district)
+        {
+            _context.Districts.Remove(district);
+            await _context.SaveChangesAsync();
+        }
     }
 }

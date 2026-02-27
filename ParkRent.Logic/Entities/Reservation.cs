@@ -27,5 +27,7 @@ namespace ParkRent.Logic.Entities
         [Required]
         public DateTime ReservationEndTime { get; set; }
 
+        public bool IsCancelled { get; set; } = false;
+        public DateTime? CancelledAt { get; set; }
     }
 }

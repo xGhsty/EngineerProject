@@ -10,7 +10,7 @@ interface ToggleSwitchProps {
 export default function ToggleSwitch({ checked, onChange, disabled = false, label }: ToggleSwitchProps) {
     return (
         <div className="toggle-switch-container">
-            {label && <span className="toggle-label">{label}</span>}
+            {label && <span key={String(checked)} className="toggle-label">{label}</span>}
             <label className="toggle-switch">
                 <input
                     type="checkbox"

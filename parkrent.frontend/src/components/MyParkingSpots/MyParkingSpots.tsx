@@ -15,6 +15,8 @@ export default function MyParkingSpots() {
     const [editingHours, setEditingHours] = useState<string | null>(null);
     const [tempFrom, setTempFrom] = useState("");
     const [tempTo, setTempTo] = useState("");
+    const [toggleErrors, setToggleErrors] = useState<Record<string, string>>({});
+    const [hoursError, setHoursError] = useState<string | null>(null);
     const navigate = useNavigate();
     const { isDark, toggle } = useDarkMode();
 
@@ -47,11 +49,19 @@ export default function MyParkingSpots() {
     };
 
     const handleToggleAvailability = async (spotId: string) => {
+        setToggleErrors(prev => { const n = { ...prev }; delete n[spotId]; return n; });
+        setMySpots(prev => prev.map(s =>
+            s.id === spotId ? { ...s, isAvailable: !s.isAvailable } : s
+        ));
         try {
             await toggleParkingSpotAvailability(spotId);
-            loadMySpots();
+            await loadMySpots();
         } catch (error: any) {
-            console.error("Błąd podczas zmiany dostępności miejsca:", error);
+            setMySpots(prev => prev.map(s =>
+                s.id === spotId ? { ...s, isAvailable: !s.isAvailable } : s
+            ));
+            const msg = error?.response?.data?.message ?? "Nie udało się zmienić dostępności miejsca";
+            setToggleErrors(prev => ({ ...prev, [spotId]: msg }));
         }
     };
 
@@ -62,12 +72,33 @@ export default function MyParkingSpots() {
     };
 
     const handleSaveHours = async (spotId: string) => {
+        setHoursError(null);
+        if (!tempFrom || !tempTo) {
+            setHoursError("Podaj obie godziny — od i do.");
+            return;
+        }
+        if (tempFrom >= tempTo) {
+            setHoursError("Godzina 'Od' musi być wcześniejsza niż 'Do'.");
+            return;
+        }
         try {
             await setAvailabilityHours(spotId, tempFrom, tempTo);
             setEditingHours(null);
-            loadMySpots();
+            await loadMySpots();
         } catch (error: any) {
-            console.error("Błąd podczas zapisywania godzin:", error);
+            const msg = error?.response?.data?.message ?? "Błąd podczas zapisywania godzin.";
+            setHoursError(msg);
+        }
+    };
+
+    const handleResetHours = async (spotId: string) => {
+        try {
+            await setAvailabilityHours(spotId, "", "");
+            setEditingHours(null);
+            await loadMySpots();
+        } catch (error: any) {
+            const msg = error?.response?.data?.message ?? "Błąd podczas resetowania godzin.";
+            setHoursError(msg);
         }
     };
 
@@ -75,6 +106,7 @@ export default function MyParkingSpots() {
         setEditingHours(null);
         setTempFrom("");
         setTempTo("");
+        setHoursError(null);
     };
 
     const handleLogout = () => {
@@ -113,20 +145,13 @@ export default function MyParkingSpots() {
                         {userInfo?.name?.[0]}{userInfo?.surname?.[0]}
                     </div>
                     <div className="user-details">
-                        <p className="greeting">Cześć {userInfo?.name}!</p>
+                        <p className="greeting">Cześć {userInfo?.username?.trim() || userInfo?.name}!</p>
                     </div>
                 </div>
 
                 <DarkModeToggle isDark={isDark} onToggle={toggle} />
 
                 <nav className="menu">
-                    <button
-                        className={`menu-item ${window.location.pathname === '/dashboard' ? 'active' : ''}`}
-                        onClick={() => navigate('/dashboard')}
-                    >
-                        <i className='bi bi-p-square'></i> Dostępne miejsca
-                    </button>
-
                     {(userRole === "DistrictAdmin" || userRole === "SuperAdmin") && (
                         <button
                             className={`menu-item ${window.location.pathname === '/admin' ? 'active' : ''}`}
@@ -135,6 +160,13 @@ export default function MyParkingSpots() {
                             <i className='bi bi-people'></i> Panel Admina
                         </button>
                     )}
+
+                    <button
+                        className={`menu-item ${window.location.pathname === '/dashboard' ? 'active' : ''}`}
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        <i className='bi bi-map'></i> Mapa parkingów
+                    </button>
 
                     <button
                         className={`menu-item ${window.location.pathname === '/my-parking-spots' ? 'active' : ''}`}
@@ -187,71 +219,97 @@ export default function MyParkingSpots() {
                                             checked={spot.isAvailable}
                                             onChange={() => handleToggleAvailability(spot.id)}
                                             disabled={!!spot.currentReservation}
-                                            label="Zablokować miejsce parkingowe?"
+                                            label={spot.isAvailable ? "Zablokować miejsce?" : "Odblokować miejsce?"}
                                         />
                                         {spot.currentReservation && (
                                             <p className="toggle-info">
                                                 Nie można zablokować miejsca w trakcie aktywnej rezerwacji
                                             </p>
                                         )}
+                                        {toggleErrors[spot.id] && (
+                                            <p className="toggle-error">{toggleErrors[spot.id]}</p>
+                                        )}
                                     </div>
 
                                     <div className="availability-hours-section">
                                         <strong>Godziny dostępności:</strong>
-                                        {editingHours === spot.id ? (
-                                            <div className="hours-edit-form">
-                                                <div className="hours-inputs">
-                                                    <label>
-                                                        Od:
-                                                        <input
-                                                            type="time"
-                                                            value={tempFrom}
-                                                            onChange={(e) => setTempFrom(e.target.value)}
-                                                            className="time-input"
-                                                        />
-                                                    </label>
-                                                    <label>
-                                                        Do:
-                                                        <input
-                                                            type="time"
-                                                            value={tempTo}
-                                                            onChange={(e) => setTempTo(e.target.value)}
-                                                            className="time-input"
-                                                        />
-                                                    </label>
+                                        {(() => {
+                                            const hasReservation = !!spot.currentReservation || spot.incomingReservations.length > 0;
+                                            if (editingHours === spot.id) {
+                                                return (
+                                                    <div className="hours-edit-form">
+                                                        <div className="hours-inputs">
+                                                            <label>
+                                                                Od:
+                                                                <input
+                                                                    type="time"
+                                                                    value={tempFrom}
+                                                                    onChange={(e) => setTempFrom(e.target.value)}
+                                                                    className="time-input"
+                                                                />
+                                                            </label>
+                                                            <label>
+                                                                Do:
+                                                                <input
+                                                                    type="time"
+                                                                    value={tempTo}
+                                                                    onChange={(e) => setTempTo(e.target.value)}
+                                                                    className="time-input"
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                        {hoursError && (
+                                                            <p className="hours-error">{hoursError}</p>
+                                                        )}
+                                                        <div className="hours-buttons">
+                                                            <button
+                                                                className="save-hours-button"
+                                                                onClick={() => handleSaveHours(spot.id)}
+                                                            >
+                                                                Zapisz
+                                                            </button>
+                                                            <button
+                                                                className="cancel-hours-button"
+                                                                onClick={handleCancelEdit}
+                                                            >
+                                                                Anuluj
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            return (
+                                                <div className="hours-display">
+                                                    {spot.availableFrom && spot.availableTo ? (
+                                                        <p className="hours-text">
+                                                            {spot.availableFrom} - {spot.availableTo}
+                                                        </p>
+                                                    ) : (
+                                                        <p className="hours-text">Brak ograniczeń czasowych</p>
+                                                    )}
+                                                    {hasReservation ? (
+                                                        <p className="toggle-info">Nie można zmieniać godzin gdy istnieje rezerwacja</p>
+                                                    ) : (
+                                                        <div className="hours-actions">
+                                                            <button
+                                                                className="edit-hours-button"
+                                                                onClick={() => handleEditHours(spot)}
+                                                            >
+                                                                <i className="bi bi-pencil"></i> Edytuj
+                                                            </button>
+                                                            {spot.availableFrom && spot.availableTo && (
+                                                                <button
+                                                                    className="reset-hours-button"
+                                                                    onClick={() => handleResetHours(spot.id)}
+                                                                >
+                                                                    <i className="bi bi-arrow-counterclockwise"></i> Resetuj
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="hours-buttons">
-                                                    <button
-                                                        className="save-hours-button"
-                                                        onClick={() => handleSaveHours(spot.id)}
-                                                    >
-                                                        Zapisz
-                                                    </button>
-                                                    <button
-                                                        className="cancel-hours-button"
-                                                        onClick={handleCancelEdit}
-                                                    >
-                                                        Anuluj
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="hours-display">
-                                                {spot.availableFrom && spot.availableTo ? (
-                                                    <p className="hours-text">
-                                                        {spot.availableFrom} - {spot.availableTo}
-                                                    </p>
-                                                ) : (
-                                                    <p className="hours-text">Brak ograniczeń czasowych</p>
-                                                )}
-                                                <button
-                                                    className="edit-hours-button"
-                                                    onClick={() => handleEditHours(spot)}
-                                                >
-                                                    <i className="bi bi-pencil"></i> Edytuj
-                                                </button>
-                                            </div>
-                                        )}
+                                            );
+                                        })()}
                                     </div>
 
                                     {spot.currentReservation && (
@@ -274,12 +332,11 @@ export default function MyParkingSpots() {
                                                     <li key={res.reservationId}>
                                                         <span className="res-user">{res.userName}</span>
                                                         <span className="res-time">
-                                                            {new Date(res.startTime).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                                            <br />
+                                                            {new Date(res.startTime).toLocaleDateString('pl-PL', { day: '2-digit', month: 'short' })}
+                                                            {', '}
                                                             {new Date(res.startTime).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
-                                                            <br />
+                                                            {' – '}
                                                             {new Date(res.endTime).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
-
                                                         </span>
                                                     </li>
                                                 ))}

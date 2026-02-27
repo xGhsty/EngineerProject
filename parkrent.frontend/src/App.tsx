@@ -1,4 +1,4 @@
-import React from 'react';
+import { useCallback, useEffect } from 'react';
 import './App.css';
 import LoginForm from './components/Login/LoginForm';
 import RegisterForm from './components/Register/RegisterForm';
@@ -8,11 +8,39 @@ import MyReservations from './components/MyReservations/MyReservations';
 import AdminPanel from './components/AdminPanel/AdminPanel';
 import Settings from './components/Settings/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useInactivityTimeout } from './hooks/useInactivityTimeout';
+
+const PUBLIC_ROUTES = ['/login', '/register'];
+
+function InactivityWatcher() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isProtected = !PUBLIC_ROUTES.includes(location.pathname);
+
+  const handleTimeout = useCallback(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  const resetTimer = useInactivityTimeout(handleTimeout, isProtected);
+
+  // Nawigacja między stronami = aktywność, resetuje timer
+  useEffect(() => {
+    if (isProtected) resetTimer();
+  }, [location.pathname, isProtected, resetTimer]);
+
+  return null;
+}
 
 function App() {
   return (
     <Router>
+      <InactivityWatcher />
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginForm />} />
