@@ -21,6 +21,11 @@ export default function RegisterForm() {
         e.preventDefault();
         setError("");
 
+        if (Password.length < 6) {
+            setError("Hasło musi mieć minimum 6 znaków.");
+            return;
+        }
+
         if (Password !== ConfirmPassword) {
             setError("Hasła nie są zgodne.");
             return;

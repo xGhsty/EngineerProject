@@ -198,7 +198,14 @@ export default function MyReservations() {
                             ? filtered.slice((historyPage - 1) * ITEMS_PER_PAGE, historyPage * ITEMS_PER_PAGE)
                             : filtered;
 
-                        if (reservations.length === 0) return (
+                        if (reservations.length === 0) return activeFilter === 'history' ? (
+                            <div className="empty-state">
+                                <div className="empty-icon">
+                                    <i className="bi bi-inbox"></i>
+                                </div>
+                                <p>Brak rezerwacji w rejestrze</p>
+                            </div>
+                        ) : (
                             <div className="empty-state">
                                 <div className="empty-icon">
                                     <i className="bi bi-clock-history"></i>
@@ -216,9 +223,9 @@ export default function MyReservations() {
                         if (filtered.length === 0) return (
                             <div className="empty-state">
                                 <div className="empty-icon">
-                                    <i className={activeFilter === 'active' ? 'bi bi-clock' : 'bi bi-clock-history'}></i>
+                                    <i className={activeFilter === 'active' ? 'bi bi-clock' : 'bi bi-inbox'}></i>
                                 </div>
-                                <p>{activeFilter === 'active' ? 'Brak aktywnych rezerwacji' : 'Brak zakończonych rezerwacji'}</p>
+                                <p>{activeFilter === 'active' ? 'Brak aktywnych rezerwacji' : 'Brak rezerwacji w rejestrze'}</p>
                             </div>
                         );
 

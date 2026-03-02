@@ -17,6 +17,7 @@ namespace ParkRent.Functionality.Dto
         public required string Email { get; set; }
         public string? Username { get; set; }
         [Required]
+        [MinLength(6, ErrorMessage = "Hasło musi mieć minimum 6 znaków")]
         public required string Password { get; set; }
         [Required]
         public required string ConfirmPassword { get; set; }
