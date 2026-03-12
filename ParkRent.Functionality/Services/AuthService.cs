@@ -31,7 +31,7 @@ namespace ParkRent.Functionality.Services
             _passwordHasher = passwordHasher;
         }
 
-        public async Task<AuthResponse> LoginAsyns(LoginRequest loginRequest)
+        public async Task<AuthResponse> LoginAsync(LoginRequest loginRequest)
         {
             var user = await _userRepository.GetByEmailAsync(loginRequest.Email);
 

@@ -22,7 +22,7 @@ namespace ParkRent.API.Controllers
         {
             try
             {
-                var result = await _authService.LoginAsyns(request);
+                var result = await _authService.LoginAsync(request);
                 return Ok(result);
             }
             catch(UnauthorizedAccessException ex)

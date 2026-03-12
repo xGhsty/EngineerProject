@@ -23,13 +23,6 @@ namespace ParkRent.Logic
             _configuration = configuration;
         }
 
-        //zła metoda, nigdy nie hardcodowac adresu baz danych.
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //{
-        //    optionsBuilder.UseSqlServer(@"server=(localdb)\MSSQLLocalDB;database=parkrent;trusted_connection=true",
-        //        x => x.MigrationsHistoryTable("__EFMigrationsHistory", "ParkRent"));
-
-        //}
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

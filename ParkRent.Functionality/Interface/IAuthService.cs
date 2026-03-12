@@ -13,6 +13,6 @@ namespace ParkRent.Storage.Interfaces
     {
         Task<AuthResponse> RegisterAsync(RegisterRequest registerRequest);
 
-        Task<AuthResponse> LoginAsyns(LoginRequest loginRequest);
+        Task<AuthResponse> LoginAsync(LoginRequest loginRequest);
     }
 }

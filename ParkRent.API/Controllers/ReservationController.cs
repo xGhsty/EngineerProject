@@ -46,8 +46,8 @@ namespace ParkRent.API.Controllers
                 // Sprawdzenie czy rezerwacja mieści się w godzinach dostępności
                 if (parkingSpot.AvailableFrom.HasValue && parkingSpot.AvailableTo.HasValue)
                 {
-                    var startTimeOfDay = request.StartTime.TimeOfDay;
-                    var endTimeOfDay = request.EndTime.TimeOfDay;
+                    var startTimeOfDay = request.StartTime.ToLocalTime().TimeOfDay;
+                    var endTimeOfDay = request.EndTime.ToLocalTime().TimeOfDay;
 
                     if (startTimeOfDay < parkingSpot.AvailableFrom.Value || startTimeOfDay >= parkingSpot.AvailableTo.Value)
                     {
